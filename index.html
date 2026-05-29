@@ -1,1824 +1,335 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MusiTest – Evaluaciones Musicales Online</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<style>
-:root {
-  --c-bg: #0d0f1a;
-  --c-surface: #13162a;
-  --c-surface2: #1a1e36;
-  --c-surface3: #222748;
-  --c-border: rgba(255,255,255,0.08);
-  --c-border2: rgba(255,255,255,0.15);
-  --c-primary: #6c63ff;
-  --c-primary-glow: rgba(108,99,255,0.3);
-  --c-accent: #00d4aa;
-  --c-accent2: #ff6b9d;
-  --c-warn: #f59e0b;
-  --c-text: #f0f2ff;
-  --c-text2: rgba(240,242,255,0.6);
-  --c-text3: rgba(240,242,255,0.35);
-  --c-success: #10b981;
-  --c-error: #ef4444;
-  --r: 12px;
-  --r-lg: 18px;
-  --r-xl: 24px;
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; scroll-behavior: smooth; }
-body {
-  font-family: 'Sora', sans-serif;
-  background: var(--c-bg);
-  color: var(--c-text);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* ─── SCROLLBAR ─── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--c-surface); }
-::-webkit-scrollbar-thumb { background: var(--c-surface3); border-radius: 99px; }
-
-/* ─── TYPOGRAPHY ─── */
-h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; }
-h2 { font-size: clamp(1.3rem, 3vw, 1.8rem); font-weight: 700; }
-h3 { font-size: 1.1rem; font-weight: 600; }
-p { color: var(--c-text2); line-height: 1.7; }
-
-/* ─── LAYOUT UTILS ─── */
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
-.gap-1 { gap: 8px; }
-.gap-2 { gap: 16px; }
-.gap-3 { gap: 24px; }
-.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-.grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-.w-full { width: 100%; }
-.text-center { text-align: center; }
-.mt-1 { margin-top: 8px; }
-.mt-2 { margin-top: 16px; }
-.mt-3 { margin-top: 24px; }
-.mt-4 { margin-top: 32px; }
-.mb-1 { margin-bottom: 8px; }
-.mb-2 { margin-bottom: 16px; }
-.mb-3 { margin-bottom: 24px; }
-
-/* ─── SURFACE CARDS ─── */
-.card {
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--r-lg);
-  padding: 24px;
-}
-.card-sm { padding: 16px; border-radius: var(--r); }
-.card-hover { transition: border-color .2s, transform .2s; cursor: pointer; }
-.card-hover:hover { border-color: var(--c-border2); transform: translateY(-2px); }
-
-/* ─── BUTTONS ─── */
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 12px 24px; border-radius: var(--r); border: none; cursor: pointer;
-  font-family: 'Sora', sans-serif; font-size: .9rem; font-weight: 600;
-  transition: all .2s; text-decoration: none; white-space: nowrap;
-}
-.btn-primary {
-  background: var(--c-primary); color: #fff;
-  box-shadow: 0 4px 24px var(--c-primary-glow);
-}
-.btn-primary:hover { background: #7c73ff; transform: translateY(-1px); }
-.btn-primary:active { transform: translateY(0); }
-.btn-secondary {
-  background: var(--c-surface2); color: var(--c-text);
-  border: 1px solid var(--c-border);
-}
-.btn-secondary:hover { border-color: var(--c-border2); background: var(--c-surface3); }
-.btn-accent { background: var(--c-accent); color: #0d1a15; }
-.btn-accent:hover { background: #00f0c0; }
-.btn-danger { background: var(--c-error); color: #fff; }
-.btn-danger:hover { background: #dc2626; }
-.btn-warn { background: var(--c-warn); color: #0d0a00; }
-.btn-warn:hover { background: #d97706; }
-.btn-sm { padding: 8px 14px; font-size: .82rem; }
-.btn-lg { padding: 16px 32px; font-size: 1rem; border-radius: var(--r-xl); }
-.btn-icon { padding: 10px; aspect-ratio: 1; }
-.btn:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
-
-/* ─── FORM ELEMENTS ─── */
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-group label { font-size: .85rem; font-weight: 600; color: var(--c-text2); }
-.form-control {
-  background: var(--c-surface2); border: 1px solid var(--c-border);
-  color: var(--c-text); font-family: 'Sora', sans-serif; font-size: .95rem;
-  padding: 11px 14px; border-radius: var(--r); outline: none; width: 100%;
-  transition: border-color .2s;
-}
-.form-control:focus { border-color: var(--c-primary); }
-.form-control::placeholder { color: var(--c-text3); }
-select.form-control { appearance: none; cursor: pointer; }
-textarea.form-control { resize: vertical; min-height: 120px; }
-
-/* ─── BADGE ─── */
-.badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 10px; border-radius: 99px; font-size: .75rem; font-weight: 600;
-}
-.badge-primary { background: var(--c-primary-glow); color: var(--c-primary); border: 1px solid rgba(108,99,255,.3); }
-.badge-success { background: rgba(16,185,129,.15); color: var(--c-success); border: 1px solid rgba(16,185,129,.3); }
-.badge-warn { background: rgba(245,158,11,.15); color: var(--c-warn); border: 1px solid rgba(245,158,11,.3); }
-.badge-error { background: rgba(239,68,68,.15); color: var(--c-error); border: 1px solid rgba(239,68,68,.3); }
-.badge-accent { background: rgba(0,212,170,.15); color: var(--c-accent); border: 1px solid rgba(0,212,170,.3); }
-
-/* ─── PROGRESS ─── */
-.progress-bar { height: 6px; background: var(--c-surface3); border-radius: 99px; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--c-primary); border-radius: 99px; transition: width .4s; }
-.progress-fill.success { background: var(--c-success); }
-
-/* ─── DIVIDER ─── */
-.divider { height: 1px; background: var(--c-border); margin: 20px 0; }
-
-/* ─── AVATAR ─── */
-.avatar {
-  width: 42px; height: 42px; border-radius: 50%; background: var(--c-primary-glow);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: .9rem; color: var(--c-primary); flex-shrink: 0;
-  border: 2px solid rgba(108,99,255,.3);
-}
-
-/* ─── TOAST ─── */
-#toast-container {
-  position: fixed; bottom: 24px; right: 24px;
-  display: flex; flex-direction: column; gap: 8px; z-index: 9999;
-}
-.toast {
-  background: var(--c-surface2); border: 1px solid var(--c-border);
-  padding: 12px 18px; border-radius: var(--r); font-size: .88rem;
-  box-shadow: 0 8px 32px rgba(0,0,0,.4);
-  animation: slideIn .3s ease;
-  display: flex; align-items: center; gap: 8px;
-}
-.toast.success { border-color: rgba(16,185,129,.4); }
-.toast.error { border-color: rgba(239,68,68,.4); }
-@keyframes slideIn { from { transform: translateX(100px); opacity:0; } to { transform: translateX(0); opacity:1; } }
-
-/* ─── MODAL ─── */
-.modal-backdrop {
-  position: fixed; inset: 0; background: rgba(0,0,0,.7);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 1000; padding: 16px; backdrop-filter: blur(4px);
-}
-.modal {
-  background: var(--c-surface); border: 1px solid var(--c-border);
-  border-radius: var(--r-xl); padding: 32px; width: 100%; max-width: 520px;
-  max-height: 90vh; overflow-y: auto;
-}
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-
-/* ─── NAV ─── */
-#app-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  background: rgba(13,15,26,.85); backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--c-border);
-  padding: 0 24px; height: 62px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.nav-logo {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 1.3rem; font-weight: 800; color: var(--c-text);
-}
-.nav-logo span { color: var(--c-primary); }
-.nav-links { display: flex; align-items: center; gap: 8px; }
-.nav-link {
-  padding: 7px 14px; border-radius: var(--r); font-size: .88rem; font-weight: 600;
-  color: var(--c-text2); cursor: pointer; border: none; background: none;
-  font-family: 'Sora', sans-serif; transition: all .2s;
-}
-.nav-link:hover { color: var(--c-text); background: var(--c-surface2); }
-.nav-link.active { color: var(--c-primary); background: var(--c-primary-glow); }
-.nav-user { display: flex; align-items: center; gap: 10px; }
-
-/* ─── PAGES ─── */
-.page { display: none; min-height: 100vh; padding-top: 62px; }
-.page.active { display: block; }
-.page-content { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
-
-/* ─── LANDING ─── */
-#page-landing {
-  background: radial-gradient(ellipse 70% 50% at 50% 20%, rgba(108,99,255,.18) 0%, transparent 70%),
-              radial-gradient(ellipse 40% 30% at 80% 60%, rgba(0,212,170,.08) 0%, transparent 60%),
-              var(--c-bg);
-}
-.landing-hero { min-height: calc(100vh - 62px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px; }
-.hero-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px; border-radius: 99px; background: var(--c-primary-glow); border: 1px solid rgba(108,99,255,.3); font-size: .82rem; font-weight: 600; color: var(--c-primary); margin-bottom: 24px; }
-.hero-title { background: linear-gradient(135deg, var(--c-text) 40%, var(--c-primary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 20px; }
-.hero-sub { font-size: 1.1rem; color: var(--c-text2); max-width: 560px; margin: 0 auto 40px; }
-.hero-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-.features-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 40px 20px; max-width: 900px; margin: 0 auto; }
-.feature-item { text-align: center; padding: 24px 16px; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); }
-.feature-icon { font-size: 2rem; margin-bottom: 12px; }
-.feature-item h3 { font-size: .95rem; margin-bottom: 6px; }
-.feature-item p { font-size: .82rem; }
-
-/* ─── EXAM ─── */
-.exam-header { background: var(--c-surface); border-bottom: 1px solid var(--c-border); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.timer-display { font-family: 'DM Mono', monospace; font-size: 1.4rem; font-weight: 500; padding: 8px 16px; background: var(--c-surface2); border-radius: var(--r); border: 1px solid var(--c-border); color: var(--c-accent); }
-.timer-display.warn { color: var(--c-error); animation: pulse 1s infinite; }
-@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
-.question-card {
-  background: var(--c-surface); border: 1px solid var(--c-border);
-  border-radius: var(--r-xl); padding: 32px; margin: 24px auto;
-  max-width: 780px;
-}
-.q-number { font-size: .82rem; font-weight: 600; color: var(--c-primary); margin-bottom: 12px; }
-.q-text { font-size: 1.15rem; font-weight: 600; color: var(--c-text); margin-bottom: 28px; line-height: 1.5; }
-.options-grid { display: flex; flex-direction: column; gap: 10px; }
-.option-btn {
-  width: 100%; text-align: left; padding: 16px 20px;
-  background: var(--c-surface2); border: 2px solid var(--c-border);
-  border-radius: var(--r); color: var(--c-text); font-family: 'Sora', sans-serif;
-  font-size: .95rem; cursor: pointer; transition: all .2s;
-  display: flex; align-items: center; gap: 14px;
-}
-.option-btn:hover { border-color: var(--c-primary); background: var(--c-surface3); }
-.option-btn.selected { border-color: var(--c-primary); background: var(--c-primary-glow); }
-.option-btn.correct { border-color: var(--c-success); background: rgba(16,185,129,.15); }
-.option-btn.incorrect { border-color: var(--c-error); background: rgba(239,68,68,.15); }
-.option-letter {
-  width: 32px; height: 32px; border-radius: 50%; background: var(--c-surface3);
-  display: flex; align-items: center; justify-content: center;
-  font-size: .82rem; font-weight: 700; color: var(--c-text2); flex-shrink: 0;
-}
-.option-btn.selected .option-letter { background: var(--c-primary); color: #fff; }
-.option-btn.correct .option-letter { background: var(--c-success); color: #fff; }
-.option-btn.incorrect .option-letter { background: var(--c-error); color: #fff; }
-.q-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; }
-
-/* ─── DASHBOARD ─── */
-.stat-card { background: var(--c-surface2); border-radius: var(--r); padding: 20px; text-align: center; }
-.stat-num { font-size: 2rem; font-weight: 800; color: var(--c-primary); font-family: 'DM Mono', monospace; }
-.stat-label { font-size: .8rem; color: var(--c-text3); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-top: 4px; }
-
-/* ─── STUDENT TABLE ─── */
-.data-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-.data-table th { text-align: left; padding: 10px 14px; color: var(--c-text3); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--c-border); }
-.data-table td { padding: 12px 14px; border-bottom: 1px solid var(--c-border); color: var(--c-text); vertical-align: middle; }
-.data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover td { background: var(--c-surface2); }
-
-/* ─── QUESTION IMPORT ─── */
-.import-area { border: 2px dashed var(--c-border); border-radius: var(--r-lg); padding: 40px; text-align: center; cursor: pointer; transition: border-color .2s; }
-.import-area:hover { border-color: var(--c-primary); }
-.import-area.drag { border-color: var(--c-accent); background: rgba(0,212,170,.05); }
-
-/* ─── RESULTS ─── */
-.score-ring { position: relative; width: 140px; height: 140px; margin: 0 auto; }
-.score-ring svg { transform: rotate(-90deg); }
-.score-ring .score-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.score-pct { font-size: 2rem; font-weight: 800; color: var(--c-text); font-family: 'DM Mono', monospace; }
-.score-sub { font-size: .75rem; color: var(--c-text3); }
-.result-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: var(--r); background: var(--c-surface2); margin-bottom: 8px; }
-.result-item.correct { border-left: 3px solid var(--c-success); }
-.result-item.incorrect { border-left: 3px solid var(--c-error); }
-
-/* ─── ADMIN SECTION TABS ─── */
-.admin-tabs { display: flex; gap: 4px; padding: 4px; background: var(--c-surface2); border-radius: var(--r); width: fit-content; margin-bottom: 24px; flex-wrap: wrap; }
-.admin-tab {
-  padding: 8px 16px; border-radius: 8px; font-size: .85rem; font-weight: 600;
-  color: var(--c-text2); cursor: pointer; border: none; background: none;
-  font-family: 'Sora', sans-serif; transition: all .2s;
-}
-.admin-tab.active { background: var(--c-primary); color: #fff; }
-
-/* ─── LIVE DOT ─── */
-.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-success); animation: blink 1.4s infinite; }
-@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:.2; } }
-
-/* ─── FOOTER ─── */
-footer { text-align: center; padding: 32px 20px; color: var(--c-text3); font-size: .8rem; border-top: 1px solid var(--c-border); margin-top: 40px; }
-footer strong { color: var(--c-text2); }
-
-/* ─── WAITING SCREEN ─── */
-.waiting-anim { width: 80px; height: 80px; border-radius: 50%; border: 4px solid var(--c-primary-glow); border-top-color: var(--c-primary); animation: spin 1s linear infinite; margin: 0 auto 24px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ─── RESPONSIVE ─── */
-@media (max-width: 640px) {
-  .page-content { padding: 20px 14px; }
-  .modal { padding: 20px; }
-  .question-card { padding: 20px; }
-  .hero-btns { flex-direction: column; align-items: stretch; }
-  .admin-tabs { width: 100%; }
-  .admin-tab { flex: 1; text-align: center; }
-  .nav-links { display: none; }
-}
-
-/* ─── HIDDEN ADMIN TOGGLE ─── */
-/* 
-  ════════════════════════════════════════════
-  PARA CONVERTIR A VERSIÓN SOLO-ESTUDIANTE:
-  Agregar esta clase al elemento #btn-admin-access:
-     class="admin-hidden"
-  O eliminar completamente el elemento con id="btn-admin-access"
-  ════════════════════════════════════════════
-*/
-.admin-hidden { display: none !important; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUSITEST - Plataforma de Evaluaciones Musicales</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════
-     TOAST CONTAINER
-════════════════════════════════════════════ -->
-<div id="toast-container"></div>
-
-<!-- ═══════════════════════════════════════════
-     NAVIGATION
-════════════════════════════════════════════ -->
-<nav id="app-nav" style="display:none;">
-  <div class="nav-logo">🎼 <span>Musi</span>Test</div>
-  <div class="nav-links" id="nav-links"></div>
-  <div class="nav-user" id="nav-user"></div>
-</nav>
-
-<!-- ═══════════════════════════════════════════
-     PAGE: LANDING / LOGIN
-════════════════════════════════════════════ -->
-<div id="page-landing" class="page active">
-  <div class="landing-hero">
-    <div class="hero-badge">🎵 Plataforma de Evaluaciones Musicales</div>
-    <h1 class="hero-title">Evalúa. Aprende.<br>Supérate.</h1>
-    <p class="hero-sub">MusiTest lleva las evaluaciones musicales al siguiente nivel. Exámenes online, resultados en tiempo real y seguimiento académico completo.</p>
-    <div class="hero-btns">
-      <button class="btn btn-primary btn-lg" onclick="showModal('modal-login')">Iniciar Sesión</button>
-      <button class="btn btn-secondary btn-lg" onclick="showModal('modal-register')">Registrarse</button>
-      <!-- ════════════════════════════════════════
-           BOTÓN ADMIN - Para versión estudiante:
-           Eliminar o añadir clase "admin-hidden"
-           a este botón.
-      ═════════════════════════════════════════ -->
-      <button id="btn-admin-access" class="btn btn-secondary btn-lg" onclick="showModal('modal-admin-login')" style="border-color: rgba(245,158,11,.4); color: var(--c-warn);">🔧 Administrador</button>
-    </div>
-  </div>
-  <div class="features-strip">
-    <div class="feature-item"><div class="feature-icon">⚡</div><h3>Tiempo Real</h3><p>Monitoreo en vivo durante los exámenes</p></div>
-    <div class="feature-item"><div class="feature-icon">🎲</div><h3>Preguntas Random</h3><p>Orden aleatorio para cada estudiante</p></div>
-    <div class="feature-item"><div class="feature-icon">📊</div><h3>Historial Completo</h3><p>Seguimiento académico detallado</p></div>
-    <div class="feature-item"><div class="feature-icon">📄</div><h3>Exportar PDF</h3><p>Certificados y reportes descargables</p></div>
-    <div class="feature-item"><div class="feature-icon">📱</div><h3>Mobile First</h3><p>Funciona en cualquier dispositivo</p></div>
-    <div class="feature-item"><div class="feature-icon">🔒</div><h3>Modo Examen</h3><p>Navegación bloqueada durante evaluación</p></div>
-  </div>
-  <footer>Desarrollado con ❤️ por <strong>Kabert Pro – LMKE</strong></footer>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     PAGE: STUDENT DASHBOARD
-════════════════════════════════════════════ -->
-<div id="page-student" class="page">
-  <div class="page-content">
-    <div id="student-waiting-banner" style="display:none;" class="card mb-3" style="border-color: rgba(245,158,11,.3);">
-      <div class="flex items-center gap-2">
-        <div class="waiting-anim" style="width:32px;height:32px;border-width:3px;margin:0;flex-shrink:0;"></div>
-        <div>
-          <h3 style="color:var(--c-warn);">Esperando evaluación</h3>
-          <p style="font-size:.85rem;">El administrador iniciará el examen en breve. Mantén esta ventana abierta.</p>
-        </div>
-      </div>
-    </div>
-    <div id="student-exam-active-banner" style="display:none;" class="card mb-3" style="border-color: rgba(0,212,170,.3);">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <div class="live-dot"></div>
-          <span style="font-weight:700;color:var(--c-accent);">¡Evaluación en curso!</span>
-        </div>
-        <button class="btn btn-accent btn-sm" onclick="goToExam()">Ir al Examen →</button>
-      </div>
-    </div>
-
-    <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:12px;">
-      <div>
-        <h2 id="student-greeting">Bienvenido</h2>
-        <p id="student-level" style="font-size:.85rem;margin-top:4px;"></p>
-      </div>
-      <div class="flex gap-1">
-        <button class="btn btn-secondary btn-sm" onclick="showStudentHistory()">📋 Historial</button>
-        <button class="btn btn-secondary btn-sm" onclick="logout()">Salir</button>
-      </div>
-    </div>
-
-    <div class="grid-4 mb-3" id="student-stats-cards">
-      <div class="stat-card"><div class="stat-num" id="s-stat-exams">0</div><div class="stat-label">Exámenes</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-stat-avg">—</div><div class="stat-label">Promedio %</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-stat-best">—</div><div class="stat-label">Mejor nota</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-stat-last">—</div><div class="stat-label">Último %</div></div>
-    </div>
-
-    <div id="student-history-section" style="display:none;">
-      <h3 class="mb-2">Historial de evaluaciones</h3>
-      <div id="student-history-list"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     PAGE: EXAM
-════════════════════════════════════════════ -->
-<div id="page-exam" class="page">
-  <div class="exam-header">
-    <div>
-      <div style="font-size:.82rem;color:var(--c-text3);font-weight:600;">MUSITEST</div>
-      <div style="font-weight:700;" id="exam-title-display">Evaluación</div>
-    </div>
-    <div class="flex items-center gap-2">
-      <div style="font-size:.85rem;color:var(--c-text2);" id="exam-progress-text">1 / 10</div>
-      <div id="exam-timer" class="timer-display">00:00</div>
-    </div>
-  </div>
-  <div style="max-width:780px;margin:0 auto;padding:0 16px;">
-    <div class="progress-bar mt-2">
-      <div class="progress-fill" id="exam-progress-bar" style="width:0%"></div>
-    </div>
-    <div class="question-card" id="question-container">
-      <div class="q-number" id="q-number"></div>
-      <div class="q-text" id="q-text"></div>
-      <div class="options-grid" id="q-options"></div>
-      <div class="q-nav">
-        <button class="btn btn-secondary" id="btn-prev-q" onclick="prevQuestion()">← Anterior</button>
-        <button class="btn btn-primary" id="btn-next-q" onclick="nextQuestion()">Siguiente →</button>
-        <button class="btn btn-accent" id="btn-finish-exam" style="display:none;" onclick="submitExam()">✓ Finalizar</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     PAGE: WAITING FOR RESULTS
-════════════════════════════════════════════ -->
-<div id="page-waiting-results" class="page">
-  <div class="page-content text-center">
-    <div style="max-width:420px;margin:80px auto;">
-      <div class="waiting-anim"></div>
-      <h2>Examen completado 🎉</h2>
-      <p class="mt-2">Esperando que el administrador libere los resultados. No cierres esta ventana.</p>
-      <div id="waiting-result-check" class="mt-3"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     PAGE: RESULTS
-════════════════════════════════════════════ -->
-<div id="page-results" class="page">
-  <div class="page-content">
-    <div style="max-width:720px;margin:0 auto;">
-      <div class="card text-center mb-3">
-        <div class="score-ring" id="score-ring-container">
-          <svg width="140" height="140" viewBox="0 0 140 140">
-            <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="10"/>
-            <circle id="score-ring-fill" cx="70" cy="70" r="58" fill="none" stroke="var(--c-primary)" stroke-width="10" stroke-linecap="round" stroke-dasharray="364" stroke-dashoffset="364"/>
-          </svg>
-          <div class="score-text">
-            <div class="score-pct" id="result-pct">0%</div>
-            <div class="score-sub">PUNTAJE</div>
-          </div>
-        </div>
-        <h2 class="mt-3" id="result-title">Resultado</h2>
-        <p class="mt-1" id="result-subtitle"></p>
-        <div class="grid-3 mt-3" id="result-stats-grid"></div>
-        <div class="flex gap-2 mt-3" style="justify-content:center;flex-wrap:wrap;">
-          <button class="btn btn-primary" onclick="downloadResultPDF()">📄 Descargar PDF</button>
-          <button class="btn btn-secondary" onclick="goToStudentDashboard()">← Volver al inicio</button>
-        </div>
-      </div>
-      <h3 class="mb-2">Detalle de respuestas</h3>
-      <div id="result-detail"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     PAGE: ADMIN DASHBOARD
-════════════════════════════════════════════ -->
-<div id="page-admin" class="page">
-  <div class="page-content">
-    <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:12px;">
-      <div>
-        <div class="flex items-center gap-2">
-          <span style="font-size:1.5rem;">🔧</span>
-          <h2>Panel Administrador</h2>
-        </div>
-        <p style="font-size:.85rem;margin-top:4px;">MusiTest – Control Total</p>
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="logout()">Salir</button>
-    </div>
-
-    <div class="admin-tabs" id="admin-tabs">
-      <button class="admin-tab active" onclick="switchAdminTab('overview')">📊 General</button>
-      <button class="admin-tab" onclick="switchAdminTab('tests')">📝 Tests</button>
-      <button class="admin-tab" onclick="switchAdminTab('students')">👥 Estudiantes</button>
-      <button class="admin-tab" onclick="switchAdminTab('control')">🎛 Control Examen</button>
-    </div>
-
-    <!-- TAB: OVERVIEW -->
-    <div id="admin-tab-overview" class="admin-tab-content">
-      <div class="grid-4 mb-3" id="admin-stats-row">
-        <div class="stat-card"><div class="stat-num" id="a-stat-students">0</div><div class="stat-label">Estudiantes</div></div>
-        <div class="stat-card"><div class="stat-num" id="a-stat-tests">0</div><div class="stat-label">Tests</div></div>
-        <div class="stat-card"><div class="stat-num" id="a-stat-online">0</div><div class="stat-label"><div class="flex items-center gap-1 justify-center"><div class="live-dot"></div>En línea</div></div></div>
-        <div class="stat-card"><div class="stat-num" id="a-stat-finished">0</div><div class="stat-label">Finalizaron</div></div>
-      </div>
-      <div class="card" id="admin-live-students-card">
-        <h3 class="mb-2">Estudiantes en línea</h3>
-        <div id="admin-live-list"><p style="font-size:.85rem;">Sin datos aún.</p></div>
-      </div>
-    </div>
-
-    <!-- TAB: TESTS -->
-    <div id="admin-tab-tests" class="admin-tab-content" style="display:none;">
-      <div class="flex gap-2 mb-3" style="flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="showModal('modal-create-test')">+ Nuevo Test</button>
-      </div>
-      <div id="tests-library"></div>
-    </div>
-
-    <!-- TAB: STUDENTS -->
-    <div id="admin-tab-students" class="admin-tab-content" style="display:none;">
-      <div class="flex gap-2 mb-3">
-        <button class="btn btn-primary" onclick="showModal('modal-add-student')">+ Agregar Estudiante</button>
-      </div>
-      <div class="card" style="overflow-x:auto;">
-        <table class="data-table" id="admin-students-table">
-          <thead><tr>
-            <th>Usuario</th><th>Nombre</th><th>Nivel</th><th>Exámenes</th><th>Promedio</th><th>Acciones</th>
-          </tr></thead>
-          <tbody id="admin-students-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- TAB: CONTROL EXAM -->
-    <div id="admin-tab-control" class="admin-tab-content" style="display:none;">
-      <div class="grid-2 mb-3">
-        <div class="card">
-          <h3 class="mb-2">Seleccionar Test</h3>
-          <select class="form-control mb-2" id="exam-test-select"><option value="">— Seleccionar test —</option></select>
-          <div class="form-group mb-2">
-            <label>Duración (minutos)</label>
-            <input type="number" class="form-control" id="exam-duration" value="30" min="1" max="180">
-          </div>
-          <div class="flex gap-1" style="flex-wrap:wrap;">
-            <button class="btn btn-accent" id="btn-start-exam" onclick="adminStartExam()">▶ Iniciar Examen</button>
-            <button class="btn btn-danger" id="btn-stop-exam" onclick="adminStopExam()" disabled>■ Detener</button>
-          </div>
-        </div>
-        <div class="card">
-          <h3 class="mb-2">Estado actual</h3>
-          <div id="exam-status-display">
-            <div class="badge badge-warn">Sin examen activo</div>
-          </div>
-          <div class="divider"></div>
-          <button class="btn btn-primary w-full" id="btn-release-results" onclick="adminReleaseResults()" disabled>
-            📢 Publicar Resultados
-          </button>
-        </div>
-      </div>
-      <div class="card">
-        <h3 class="mb-2">Progreso en tiempo real</h3>
-        <div id="admin-exam-progress-list"><p style="font-size:.85rem;">Inicia un examen para ver el progreso.</p></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     MODALS
-════════════════════════════════════════════ -->
-
-<!-- LOGIN MODAL -->
-<div id="modal-login" class="modal-backdrop" style="display:none;" onclick="closeModalOutside(event,'modal-login')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h3>🎵 Iniciar Sesión</h3>
-      <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal('modal-login')">✕</button>
-    </div>
-    <div class="form-group mb-2">
-      <label>Usuario</label>
-      <input type="text" class="form-control" id="login-user" placeholder="Tu nombre de usuario" autocomplete="username">
-    </div>
-    <div class="form-group mb-3">
-      <label>Contraseña</label>
-      <input type="password" class="form-control" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginStudent()">
-    </div>
-    <button class="btn btn-primary w-full" onclick="loginStudent()">Entrar →</button>
-    <p class="text-center mt-2" style="font-size:.82rem;">¿No tienes cuenta? <a href="#" onclick="closeModal('modal-login');showModal('modal-register');" style="color:var(--c-primary);">Regístrate aquí</a></p>
-  </div>
-</div>
-
-<!-- REGISTER MODAL -->
-<div id="modal-register" class="modal-backdrop" style="display:none;" onclick="closeModalOutside(event,'modal-register')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h3>✨ Crear Cuenta</h3>
-      <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal('modal-register')">✕</button>
-    </div>
-    <div class="form-group mb-2">
-      <label>Nombre completo</label>
-      <input type="text" class="form-control" id="reg-name" placeholder="Ej. María García López">
-    </div>
-    <div class="form-group mb-2">
-      <label>Usuario</label>
-      <input type="text" class="form-control" id="reg-user" placeholder="Sin espacios ni caracteres especiales">
-    </div>
-    <div class="form-group mb-2">
-      <label>Contraseña</label>
-      <input type="password" class="form-control" id="reg-pass" placeholder="Mínimo 4 caracteres">
-    </div>
-    <div class="form-group mb-3">
-      <label>Nivel académico</label>
-      <select class="form-control" id="reg-level">
-        <optgroup label="PRIMARIA">
-          <option value="1ro Primaria">1ro Primaria</option>
-          <option value="2do Primaria">2do Primaria</option>
-          <option value="3ro Primaria">3ro Primaria</option>
-          <option value="4to Primaria">4to Primaria</option>
-          <option value="5to Primaria">5to Primaria</option>
-          <option value="6to Primaria">6to Primaria</option>
-        </optgroup>
-        <optgroup label="SECUNDARIA">
-          <option value="1ro Secundaria">1ro Secundaria</option>
-          <option value="2do Secundaria">2do Secundaria</option>
-          <option value="3ro Secundaria">3ro Secundaria</option>
-          <option value="4to Secundaria">4to Secundaria</option>
-          <option value="5to Secundaria">5to Secundaria</option>
-          <option value="6to Secundaria">6to Secundaria</option>
-        </optgroup>
-      </select>
-    </div>
-    <button class="btn btn-primary w-full" onclick="registerStudent()">Crear Cuenta →</button>
-  </div>
-</div>
-
-<!-- ADMIN LOGIN MODAL -->
-<div id="modal-admin-login" class="modal-backdrop" style="display:none;" onclick="closeModalOutside(event,'modal-admin-login')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h3>🔧 Acceso Administrador</h3>
-      <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal('modal-admin-login')">✕</button>
-    </div>
-    <div class="form-group mb-3">
-      <label>Clave de administrador</label>
-      <input type="password" class="form-control" id="admin-key-input" placeholder="Clave secreta" onkeydown="if(event.key==='Enter')loginAdmin()">
-    </div>
-    <button class="btn btn-warn w-full" onclick="loginAdmin()">Acceder como Admin →</button>
-    <p class="mt-2" style="font-size:.75rem;color:var(--c-text3);text-align:center;">Clave por defecto: <strong>musitest2024</strong></p>
-  </div>
-</div>
-
-<!-- CREATE TEST MODAL -->
-<div id="modal-create-test" class="modal-backdrop" style="display:none;" onclick="closeModalOutside(event,'modal-create-test')">
-  <div class="modal" onclick="event.stopPropagation()" style="max-width:700px;">
-    <div class="modal-header">
-      <h3>📝 Crear / Importar Test</h3>
-      <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal('modal-create-test')">✕</button>
-    </div>
-    <div class="form-group mb-2">
-      <label>Nombre del test</label>
-      <input type="text" class="form-control" id="test-name-input" placeholder="Ej. Teoría Musical – Nivel Básico">
-    </div>
-    <div class="form-group mb-2">
-      <label>Descripción (opcional)</label>
-      <input type="text" class="form-control" id="test-desc-input" placeholder="Breve descripción del test">
-    </div>
-    <div class="form-group mb-2">
-      <label>Pegar preguntas (formato TXT)</label>
-      <textarea class="form-control" id="test-questions-txt" style="min-height:200px;font-family:'DM Mono',monospace;font-size:.82rem;" placeholder="1. ¿Cuántas notas musicales existen?
-A. 5
-B. 7 R
-C. 8
-D. 12
-
-2. ¿Cuál es la nota más grave?
-A. Do R
-B. La
-C. Sol
-D. Mi"></textarea>
-    </div>
-    <div class="import-area mb-2" id="txt-drop-area" onclick="document.getElementById('txt-file-input').click()">
-      <div style="font-size:2rem;margin-bottom:8px;">📄</div>
-      <p style="font-size:.85rem;">Arrastra un archivo .txt o haz clic para seleccionar</p>
-      <input type="file" id="txt-file-input" accept=".txt" style="display:none;" onchange="loadTxtFile(this)">
-    </div>
-    <div id="import-preview" style="display:none;" class="card card-sm mb-2" style="background:var(--c-surface2);">
-      <p id="import-preview-text" style="font-size:.85rem;"></p>
-    </div>
-    <div class="flex gap-2" style="flex-wrap:wrap;">
-      <button class="btn btn-secondary" onclick="previewTest()">👁 Previsualizar</button>
-      <button class="btn btn-primary" onclick="saveTest()">💾 Guardar Test</button>
-    </div>
-  </div>
-</div>
-
-<!-- EDIT TEST MODAL -->
-<div id="modal-edit-test" class="modal-backdrop" style="display:none;" onclick="closeModalOutside(event,'modal-edit-test')">
-  <div class="modal" onclick="event.stopPropagation()" style="max-width:700px;">
-    <div class="modal-header">
-      <h3>✏️ Editar Test</h3>
-      <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal('modal-edit-test')">✕</button>
-    </div>
-    <div class="form-group mb-2">
-      <label>Nombre del test</label>
-      <input type="text" class="form-control" id="edit-test-name">
-    </div>
-    <div class="form-group mb-2">
-      <label>Descripción</label>
-      <input type="text" class="form-control" id="edit-test-desc">
-    </div>
-    <div class="form-group mb-3">
-      <label>Preguntas (formato TXT)</label>
-      <textarea class="form-control" id="edit-test-txt" style="min-height:200px;font-family:'DM Mono',monospace;font-size:.82rem;"></textarea>
-    </div>
-    <button class="btn btn-primary w-full" onclick="saveEditTest()">Guardar Cambios</button>
-    <input type="hidden" id="edit-test-id">
-  </div>
-</div>
-
-<!-- ADD STUDENT MODAL -->
-<div id="modal-add-student" class="modal-backdrop" style="display:none;" onclick="closeModalOutside(event,'modal-add-student')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h3>👤 Agregar Estudiante</h3>
-      <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal('modal-add-student')">✕</button>
-    </div>
-    <div class="form-group mb-2">
-      <label>Nombre completo</label>
-      <input type="text" class="form-control" id="add-s-name">
-    </div>
-    <div class="form-group mb-2">
-      <label>Usuario</label>
-      <input type="text" class="form-control" id="add-s-user">
-    </div>
-    <div class="form-group mb-2">
-      <label>Contraseña</label>
-      <input type="password" class="form-control" id="add-s-pass">
-    </div>
-    <div class="form-group mb-3">
-      <label>Nivel</label>
-      <select class="form-control" id="add-s-level">
-        <optgroup label="PRIMARIA">
-          <option>1ro Primaria</option><option>2do Primaria</option><option>3ro Primaria</option>
-          <option>4to Primaria</option><option>5to Primaria</option><option>6to Primaria</option>
-        </optgroup>
-        <optgroup label="SECUNDARIA">
-          <option>1ro Secundaria</option><option>2do Secundaria</option><option>3ro Secundaria</option>
-          <option>4to Secundaria</option><option>5to Secundaria</option><option>6to Secundaria</option>
-        </optgroup>
-      </select>
-    </div>
-    <button class="btn btn-primary w-full" onclick="adminAddStudent()">Agregar Estudiante</button>
-  </div>
-</div>
-
-<!-- EDIT STUDENT MODAL -->
-<div id="modal-edit-student" class="modal-backdrop" style="display:none;">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h3>✏️ Editar Estudiante</h3>
-      <button class="btn btn-secondary btn-sm btn-icon" onclick="closeModal('modal-edit-student')">✕</button>
-    </div>
-    <div class="form-group mb-2">
-      <label>Nombre completo</label>
-      <input type="text" class="form-control" id="edit-s-name">
-    </div>
-    <div class="form-group mb-2">
-      <label>Nueva contraseña (vacío = no cambiar)</label>
-      <input type="password" class="form-control" id="edit-s-pass" placeholder="Nueva contraseña">
-    </div>
-    <div class="form-group mb-3">
-      <label>Nivel</label>
-      <select class="form-control" id="edit-s-level">
-        <optgroup label="PRIMARIA">
-          <option>1ro Primaria</option><option>2do Primaria</option><option>3ro Primaria</option>
-          <option>4to Primaria</option><option>5to Primaria</option><option>6to Primaria</option>
-        </optgroup>
-        <optgroup label="SECUNDARIA">
-          <option>1ro Secundaria</option><option>2do Secundaria</option><option>3ro Secundaria</option>
-          <option>4to Secundaria</option><option>5to Secundaria</option><option>6to Secundaria</option>
-        </optgroup>
-      </select>
-    </div>
-    <button class="btn btn-primary w-full" onclick="saveEditStudent()">Guardar Cambios</button>
-    <input type="hidden" id="edit-s-uid">
-  </div>
-</div>
-
-<!-- CONFIRM MODAL -->
-<div id="modal-confirm" class="modal-backdrop" style="display:none;">
-  <div class="modal" style="max-width:400px;" onclick="event.stopPropagation()">
-    <h3 id="confirm-title" class="mb-2">¿Confirmar acción?</h3>
-    <p id="confirm-msg" class="mb-3"></p>
-    <div class="flex gap-2">
-      <button class="btn btn-secondary" onclick="closeModal('modal-confirm')">Cancelar</button>
-      <button class="btn btn-danger" id="confirm-ok-btn">Confirmar</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════
-     FIREBASE + APP LOGIC
-════════════════════════════════════════════ -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, get, push, update, remove, onValue, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-// ── Firebase Config ──────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyCNs2oPeVaRAx7q-97QCjKzIT--wVnHS3o",
-  authDomain: "musitest-c1d2a.firebaseapp.com",
-  projectId: "musitest-c1d2a",
-  storageBucket: "musitest-c1d2a.firebasestorage.app",
-  messagingSenderId: "631952906510",
-  appId: "1:631952906510:web:0a027b9407360b52e21f5f",
-  databaseURL: "https://musitest-c1d2a-default-rtdb.firebaseio.com"
-};
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// ── ADMIN PASSKEY (cambiar si se desea) ─────────────────────────
-const ADMIN_KEY = "musitest2024";
-
-// ── STATE ────────────────────────────────────────────────────────
-let state = {
-  user: null,      // { uid, username, name, level, isAdmin }
-  examSession: null,
-  currentQuestions: [],
-  currentAnswers: {},
-  currentQIndex: 0,
-  timerInterval: null,
-  timerLeft: 0,
-  examListeners: [],
-  resultData: null,
-};
-
-// ─────────────────────────────────────────────────────────────────
-// UTILS
-// ─────────────────────────────────────────────────────────────────
-function toast(msg, type='success') {
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ';
-  t.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
-  document.getElementById('toast-container').appendChild(t);
-  setTimeout(() => t.remove(), 3500);
-}
-
-function showModal(id) { document.getElementById(id).style.display = 'flex'; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-function closeModalOutside(e, id) { if(e.target.id === id) closeModal(id); }
-
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  document.getElementById('app-nav').style.display = id === 'landing' ? 'none' : 'flex';
-}
-
-function showConfirm(title, msg, cb) {
-  document.getElementById('confirm-title').textContent = title;
-  document.getElementById('confirm-msg').textContent = msg;
-  const btn = document.getElementById('confirm-ok-btn');
-  btn.onclick = () => { closeModal('modal-confirm'); cb(); };
-  showModal('modal-confirm');
-}
-
-function shuffle(arr) {
-  const a = [...arr];
-  for(let i=a.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-  return a;
-}
-
-function initials(name) {
-  return name.split(' ').slice(0,2).map(w=>w[0]?.toUpperCase()||'').join('');
-}
-
-function formatDate(ts) {
-  if(!ts) return '—';
-  return new Date(ts).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' });
-}
-
-// Make functions global for onclick handlers
-window.showModal = showModal;
-window.closeModal = closeModal;
-window.closeModalOutside = closeModalOutside;
-window.showConfirm = showConfirm;
-
-// ─────────────────────────────────────────────────────────────────
-// QUESTION PARSER
-// ─────────────────────────────────────────────────────────────────
-function parseTxt(txt) {
-  const lines = txt.split('\n').map(l => l.trim()).filter(l => l);
-  const questions = [];
-  let current = null;
-
-  for(const line of lines) {
-    const qMatch = line.match(/^\d+\.\s+(.+)/);
-    const optMatch = line.match(/^([A-Da-d])[.)]\s+(.+)/);
-
-    if(qMatch) {
-      if(current) questions.push(current);
-      current = { text: qMatch[1], options: [], correctIndex: 0 };
-    } else if(optMatch && current) {
-      const optText = optMatch[2];
-      const isCorrect = optText.toUpperCase().includes(' R') || optText.endsWith('R');
-      const cleanText = optText.replace(/\s+R$/i, '').replace(/R$/i, '').trim();
-      if(isCorrect) current.correctIndex = current.options.length;
-      current.options.push(cleanText);
-    }
-  }
-  if(current && current.options.length > 0) questions.push(current);
-  return questions;
-}
-
-function txtToStorable(txt) {
-  // Store questions with their correct answer label for shuffling safety
-  const parsed = parseTxt(txt);
-  return parsed.map(q => ({
-    text: q.text,
-    options: q.options,
-    correctOption: q.options[q.correctIndex]
-  }));
-}
-
-// ─────────────────────────────────────────────────────────────────
-// AUTH
-// ─────────────────────────────────────────────────────────────────
-window.loginStudent = async function() {
-  const username = document.getElementById('login-user').value.trim().toLowerCase();
-  const pass = document.getElementById('login-pass').value;
-  if(!username || !pass) { toast('Completa todos los campos', 'error'); return; }
-
-  try {
-    const snap = await get(ref(db, 'students'));
-    if(!snap.exists()) { toast('Usuario no encontrado', 'error'); return; }
-    let found = null, foundKey = null;
-    snap.forEach(child => {
-      const d = child.val();
-      if(d.username === username && d.password === pass) { found = d; foundKey = child.key; }
-    });
-    if(!found) { toast('Usuario o contraseña incorrectos', 'error'); return; }
-    state.user = { uid: foundKey, username: found.username, name: found.name, level: found.level, isAdmin: false };
-    closeModal('modal-login');
-    await set(ref(db, `students/${foundKey}/lastSeen`), Date.now());
-    toast(`Bienvenido, ${found.name.split(' ')[0]}! 🎵`);
-    loadStudentDashboard();
-  } catch(e) { toast('Error de conexión: '+e.message, 'error'); }
-};
-
-window.registerStudent = async function() {
-  const name = document.getElementById('reg-name').value.trim();
-  const user = document.getElementById('reg-user').value.trim().toLowerCase().replace(/\s+/g,'');
-  const pass = document.getElementById('reg-pass').value;
-  const level = document.getElementById('reg-level').value;
-  if(!name||!user||!pass) { toast('Completa todos los campos', 'error'); return; }
-  if(pass.length < 4) { toast('Contraseña mínimo 4 caracteres', 'error'); return; }
-
-  try {
-    const snap = await get(ref(db, 'students'));
-    if(snap.exists()) {
-      let exists = false;
-      snap.forEach(c => { if(c.val().username === user) exists = true; });
-      if(exists) { toast('Ese usuario ya existe', 'error'); return; }
-    }
-    const newRef = push(ref(db, 'students'));
-    await set(newRef, { username: user, password: pass, name, level, history: {}, createdAt: Date.now(), lastSeen: Date.now() });
-    state.user = { uid: newRef.key, username: user, name, level, isAdmin: false };
-    closeModal('modal-register');
-    toast('Cuenta creada exitosamente 🎉');
-    loadStudentDashboard();
-  } catch(e) { toast('Error: '+e.message, 'error'); }
-};
-
-window.loginAdmin = function() {
-  const key = document.getElementById('admin-key-input').value;
-  if(key !== ADMIN_KEY) { toast('Clave incorrecta', 'error'); return; }
-  state.user = { uid: 'admin', name: 'Administrador', isAdmin: true };
-  closeModal('modal-admin-login');
-  toast('Bienvenido, Administrador 🔧', 'success');
-  loadAdminDashboard();
-};
-
-window.logout = function() {
-  if(state.timerInterval) clearInterval(state.timerInterval);
-  state.examListeners.forEach(unsub => { try { unsub(); } catch(e){} });
-  state.examListeners = [];
-  state.user = null;
-  state.examSession = null;
-  state.currentQuestions = [];
-  state.currentAnswers = {};
-  showPage('landing');
-  document.getElementById('app-nav').style.display = 'none';
-};
-
-// ─────────────────────────────────────────────────────────────────
-// STUDENT DASHBOARD
-// ─────────────────────────────────────────────────────────────────
-async function loadStudentDashboard() {
-  setupStudentNav();
-  showPage('student');
-  document.getElementById('student-greeting').textContent = `Hola, ${state.user.name.split(' ')[0]} 👋`;
-  document.getElementById('student-level').textContent = `📚 ${state.user.level}`;
-
-  // Load history stats
-  const snap = await get(ref(db, `students/${state.user.uid}/history`));
-  let history = [];
-  if(snap.exists()) snap.forEach(c => history.push({ id: c.key, ...c.val() }));
-  history.sort((a,b) => b.date - a.date);
-
-  const exams = history.length;
-  const avgs = history.map(h => h.pct);
-  const avg = exams ? Math.round(avgs.reduce((a,b)=>a+b,0)/exams) : null;
-  const best = exams ? Math.max(...avgs) : null;
-
-  document.getElementById('s-stat-exams').textContent = exams;
-  document.getElementById('s-stat-avg').textContent = avg !== null ? avg+'%' : '—';
-  document.getElementById('s-stat-best').textContent = best !== null ? best+'%' : '—';
-  document.getElementById('s-stat-last').textContent = exams ? avgs[0]+'%' : '—';
-
-  // Watch exam state
-  watchExamState();
-}
-
-function setupStudentNav() {
-  document.getElementById('nav-links').innerHTML = `
-    <button class="nav-link active" onclick="goToStudentDashboard()">🏠 Inicio</button>
-    <button class="nav-link" onclick="showStudentHistory()">📋 Historial</button>
-  `;
-  const u = state.user;
-  document.getElementById('nav-user').innerHTML = `
-    <div class="avatar">${initials(u.name)}</div>
-    <span style="font-size:.85rem;font-weight:600;">${u.name.split(' ')[0]}</span>
-  `;
-}
-
-window.goToStudentDashboard = function() {
-  if(state.examSession?.status === 'active') { showPage('exam'); return; }
-  showPage('student');
-};
-
-window.showStudentHistory = async function() {
-  document.getElementById('student-history-section').style.display = 'block';
-  const snap = await get(ref(db, `students/${state.user.uid}/history`));
-  let history = [];
-  if(snap.exists()) snap.forEach(c => history.push({ id: c.key, ...c.val() }));
-  history.sort((a,b) => b.date - a.date);
-
-  if(!history.length) {
-    document.getElementById('student-history-list').innerHTML = '<p style="font-size:.85rem;">Sin historial aún.</p>';
-    return;
-  }
-  document.getElementById('student-history-list').innerHTML = history.map(h => `
-    <div class="result-item ${h.pct >= 60 ? 'correct' : 'incorrect'}" style="margin-bottom:8px;border-radius:var(--r);">
-      <div style="flex:1;">
-        <div style="font-weight:600;font-size:.9rem;">${h.testName || 'Evaluación'}</div>
-        <div style="font-size:.78rem;color:var(--c-text3);margin-top:3px;">${formatDate(h.date)} · ${h.correct}/${h.total} correctas</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-        <span class="badge ${h.pct>=60?'badge-success':'badge-error'}">${h.pct}%</span>
-        <button class="btn btn-secondary btn-sm" onclick="window.downloadHistoryPDF('${h.id}')">📄 PDF</button>
-      </div>
-    </div>
-  `).join('');
-};
-
-// ─────────────────────────────────────────────────────────────────
-// EXAM STATE WATCHER (student side)
-// ─────────────────────────────────────────────────────────────────
-function watchExamState() {
-  const unsub = onValue(ref(db, 'activeExam'), snap => {
-    const data = snap.val();
-    if(!data) {
-      // No active exam
-      document.getElementById('student-waiting-banner').style.display = 'none';
-      document.getElementById('student-exam-active-banner').style.display = 'none';
-      state.examSession = null;
-      return;
-    }
-
-    if(data.status === 'active') {
-      state.examSession = data;
-      // Check if this student already submitted
-      const myResult = data.results?.[state.user.uid];
-      if(myResult?.submitted) {
-        // waiting for results
-        if(data.resultsReleased) {
-          showResultsPage(myResult);
-        } else {
-          showPage('waiting-results');
-          watchResultsRelease();
-        }
-        return;
-      }
-      document.getElementById('student-waiting-banner').style.display = 'none';
-      document.getElementById('student-exam-active-banner').style.display = 'flex';
-    } else if(data.status === 'waiting') {
-      state.examSession = data;
-      document.getElementById('student-waiting-banner').style.display = 'flex';
-      document.getElementById('student-exam-active-banner').style.display = 'none';
-    }
-  });
-  state.examListeners.push(unsub);
-}
-
-window.goToExam = function() {
-  if(!state.examSession) return;
-  startStudentExam(state.examSession);
-};
-
-async function startStudentExam(examData) {
-  showPage('exam');
-  document.getElementById('exam-title-display').textContent = examData.testName || 'Evaluación';
-
-  // Load questions from test
-  const snap = await get(ref(db, `tests/${examData.testId}/questions`));
-  if(!snap.exists()) { toast('Error al cargar preguntas','error'); return; }
-  let questions = [];
-  snap.forEach(c => questions.push({ id: c.key, ...c.val() }));
-
-  // Shuffle questions and options for this student
-  questions = shuffle(questions);
-  state.currentQuestions = questions.map(q => {
-    const opts = shuffle(q.options.map((o,i) => ({ text: o, isCorrect: o === q.correctOption })));
-    return { ...q, shuffledOptions: opts };
-  });
-
-  // Restore saved answers if any
-  const savedSnap = await get(ref(db, `activeExam/results/${state.user.uid}/answers`));
-  state.currentAnswers = savedSnap.exists() ? (savedSnap.val() || {}) : {};
-  state.currentQIndex = 0;
-
-  // Start timer
-  const elapsed = Date.now() - examData.startedAt;
-  const totalMs = (examData.duration || 30) * 60 * 1000;
-  state.timerLeft = Math.max(0, Math.floor((totalMs - elapsed) / 1000));
-  startExamTimer();
-
-  renderQuestion();
-}
-
-function renderQuestion() {
-  const q = state.currentQuestions[state.currentQIndex];
-  const total = state.currentQuestions.length;
-  document.getElementById('q-number').textContent = `Pregunta ${state.currentQIndex+1} de ${total}`;
-  document.getElementById('q-text').textContent = q.text;
-  document.getElementById('exam-progress-text').textContent = `${state.currentQIndex+1} / ${total}`;
-  document.getElementById('exam-progress-bar').style.width = `${((state.currentQIndex+1)/total)*100}%`;
-
-  const letters = ['A','B','C','D','E'];
-  const selected = state.currentAnswers[q.id];
-  document.getElementById('q-options').innerHTML = q.shuffledOptions.map((opt, i) => `
-    <button class="option-btn ${selected === i ? 'selected' : ''}" onclick="selectOption(${i})">
-      <div class="option-letter">${letters[i]}</div>
-      <span>${opt.text}</span>
-    </button>
-  `).join('');
-
-  document.getElementById('btn-prev-q').style.display = state.currentQIndex === 0 ? 'none' : 'flex';
-  const isLast = state.currentQIndex === total - 1;
-  document.getElementById('btn-next-q').style.display = isLast ? 'none' : 'flex';
-  document.getElementById('btn-finish-exam').style.display = isLast ? 'flex' : 'none';
-}
-
-window.selectOption = async function(optIndex) {
-  const q = state.currentQuestions[state.currentQIndex];
-  state.currentAnswers[q.id] = optIndex;
-  renderQuestion();
-  // Auto-save to Firebase
-  await update(ref(db, `activeExam/results/${state.user.uid}`), {
-    studentName: state.user.name,
-    level: state.user.level,
-    answers: state.currentAnswers,
-    progress: state.currentQIndex + 1,
-    total: state.currentQuestions.length,
-    lastSeen: Date.now()
-  });
-};
-
-window.prevQuestion = function() { if(state.currentQIndex > 0) { state.currentQIndex--; renderQuestion(); } };
-window.nextQuestion = function() { if(state.currentQIndex < state.currentQuestions.length-1) { state.currentQIndex++; renderQuestion(); } };
-
-window.submitExam = async function() {
-  const answered = Object.keys(state.currentAnswers).length;
-  const total = state.currentQuestions.length;
-  const unanswered = total - answered;
-
-  const doSubmit = async () => {
-    if(state.timerInterval) clearInterval(state.timerInterval);
-    // Calculate score
-    let correct = 0;
-    state.currentQuestions.forEach(q => {
-      const ansIdx = state.currentAnswers[q.id];
-      if(ansIdx !== undefined && q.shuffledOptions[ansIdx]?.isCorrect) correct++;
-    });
-    const pct = Math.round((correct/total)*100);
-
-    // Save detailed result
-    const resultData = {
-      studentName: state.user.name,
-      level: state.user.level,
-      answers: state.currentAnswers,
-      questionsSnapshot: state.currentQuestions.map(q => ({
-        id: q.id, text: q.text,
-        shuffledOptions: q.shuffledOptions,
-        selectedIdx: state.currentAnswers[q.id] ?? null
-      })),
-      correct, total, pct,
-      submitted: true,
-      submittedAt: Date.now()
-    };
-
-    await update(ref(db, `activeExam/results/${state.user.uid}`), resultData);
-    showPage('waiting-results');
-    watchResultsRelease();
-  };
-
-  if(unanswered > 0) {
-    showConfirm('¿Finalizar examen?', `Tienes ${unanswered} pregunta(s) sin responder. ¿Deseas entregar de todas formas?`, doSubmit);
-  } else {
-    await doSubmit();
-  }
-};
-
-function startExamTimer() {
-  if(state.timerInterval) clearInterval(state.timerInterval);
-  const el = document.getElementById('exam-timer');
-  const tick = () => {
-    if(state.timerLeft <= 0) { clearInterval(state.timerInterval); submitExam(); return; }
-    const m = Math.floor(state.timerLeft/60).toString().padStart(2,'0');
-    const s = (state.timerLeft%60).toString().padStart(2,'0');
-    el.textContent = `${m}:${s}`;
-    el.className = 'timer-display' + (state.timerLeft <= 60 ? ' warn' : '');
-    state.timerLeft--;
-  };
-  tick();
-  state.timerInterval = setInterval(tick, 1000);
-}
-
-function watchResultsRelease() {
-  const unsub = onValue(ref(db, 'activeExam/resultsReleased'), async snap => {
-    if(snap.val() === true) {
-      // Load my result
-      const mySnap = await get(ref(db, `activeExam/results/${state.user.uid}`));
-      if(mySnap.exists()) {
-        const r = mySnap.val();
-        const testNameSnap = await get(ref(db, 'activeExam/testName'));
-        r.testName = testNameSnap.val() || 'Evaluación';
-        showResultsPage(r);
-        saveHistoryEntry(r);
-      }
-    }
-  });
-  state.examListeners.push(unsub);
-}
-
-function showResultsPage(r) {
-  state.resultData = r;
-  showPage('results');
-  const pct = r.pct;
-  document.getElementById('result-pct').textContent = pct+'%';
-  document.getElementById('result-title').textContent = pct >= 90 ? '¡Excelente! 🌟' : pct >= 70 ? '¡Muy bien! 🎉' : pct >= 60 ? 'Aprobado ✓' : 'Necesitas mejorar 📖';
-  document.getElementById('result-subtitle').textContent = `${r.correct} de ${r.total} respuestas correctas`;
-
-  // Ring animation
-  const circumference = 364;
-  const offset = circumference - (pct/100)*circumference;
-  const ring = document.getElementById('score-ring-fill');
-  ring.setAttribute('stroke-dashoffset', circumference);
-  ring.style.stroke = pct >= 60 ? 'var(--c-success)' : 'var(--c-error)';
-  setTimeout(() => { ring.style.transition = 'stroke-dashoffset 1.2s ease'; ring.setAttribute('stroke-dashoffset', offset); }, 100);
-
-  document.getElementById('result-stats-grid').innerHTML = `
-    <div class="stat-card"><div class="stat-num">${r.correct}</div><div class="stat-label">Correctas</div></div>
-    <div class="stat-card"><div class="stat-num">${r.total - r.correct}</div><div class="stat-label">Incorrectas</div></div>
-    <div class="stat-card"><div class="stat-num">${r.total}</div><div class="stat-label">Total</div></div>
-  `;
-
-  // Detail
-  if(r.questionsSnapshot) {
-    document.getElementById('result-detail').innerHTML = r.questionsSnapshot.map((q, i) => {
-      const selectedIdx = q.selectedIdx;
-      const selected = selectedIdx !== null && selectedIdx !== undefined ? q.shuffledOptions[selectedIdx] : null;
-      const isCorrect = selected?.isCorrect;
-      const correctOpt = q.shuffledOptions.find(o => o.isCorrect);
-      return `
-        <div class="result-item ${isCorrect ? 'correct' : 'incorrect'}">
-          <div style="font-size:1.1rem;">${isCorrect ? '✅' : '❌'}</div>
-          <div style="flex:1;">
-            <div style="font-weight:600;font-size:.9rem;margin-bottom:6px;">${i+1}. ${q.text}</div>
-            <div style="font-size:.82rem;color:var(--c-text2);">Tu respuesta: <strong style="color:${isCorrect?'var(--c-success)':'var(--c-error)'};">${selected ? selected.text : 'Sin responder'}</strong></div>
-            ${!isCorrect ? `<div style="font-size:.82rem;color:var(--c-text2);">Correcta: <strong style="color:var(--c-success);">${correctOpt?.text || '—'}</strong></div>` : ''}
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-}
-
-async function saveHistoryEntry(r) {
-  const entry = {
-    testName: r.testName, date: Date.now(),
-    correct: r.correct, total: r.total, pct: r.pct
-  };
-  const newRef = push(ref(db, `students/${state.user.uid}/history`));
-  await set(newRef, entry);
-}
-
-// ─────────────────────────────────────────────────────────────────
-// PDF EXPORT
-// ─────────────────────────────────────────────────────────────────
-window.downloadResultPDF = function() { generatePDF(state.resultData, state.user); };
-
-window.downloadHistoryPDF = async function(histId) {
-  const snap = await get(ref(db, `students/${state.user.uid}/history/${histId}`));
-  if(!snap.exists()) return;
-  generatePDF(snap.val(), state.user);
-};
-
-function generatePDF(r, user) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-  const W = 210; let y = 20;
-
-  doc.setFillColor(30, 27, 75);
-  doc.rect(0, 0, W, 40, 'F');
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(22); doc.setTextColor(255,255,255);
-  doc.text('🎼 MusiTest', 14, 20);
-  doc.setFontSize(10); doc.setFont('helvetica','normal');
-  doc.text('Certificado de Evaluación', 14, 30);
-  doc.setFontSize(9); doc.text('Kabert Pro – LMKE', W-14, 30, { align:'right' });
-  y = 55;
-
-  doc.setTextColor(30,27,75);
-  doc.setFont('helvetica','bold'); doc.setFontSize(14);
-  doc.text(r.testName || 'Evaluación', W/2, y, { align:'center' }); y += 12;
-
-  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(60,60,80);
-  const fields = [
-    ['Estudiante', user?.name || r.studentName || '—'],
-    ['Nivel', user?.level || r.level || '—'],
-    ['Fecha', formatDate(r.date || Date.now())],
-    ['Respuestas correctas', `${r.correct} de ${r.total}`],
-    ['Porcentaje', `${r.pct}%`],
-    ['Estado', r.pct >= 60 ? '✓ APROBADO' : '✗ REPROBADO'],
-  ];
-  fields.forEach(([label, val]) => {
-    doc.setFont('helvetica','bold'); doc.text(label+':', 20, y);
-    doc.setFont('helvetica','normal'); doc.text(val, 80, y);
-    y += 8;
-  });
-
-  y += 6;
-  doc.setDrawColor(200,200,220); doc.line(14, y, W-14, y); y += 10;
-  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(30,27,75);
-  doc.text('Detalle de respuestas', 14, y); y += 8;
-
-  if(r.questionsSnapshot) {
-    r.questionsSnapshot.forEach((q, i) => {
-      if(y > 260) { doc.addPage(); y = 20; }
-      const selected = q.selectedIdx !== null && q.selectedIdx !== undefined ? q.shuffledOptions[q.selectedIdx] : null;
-      const isOk = selected?.isCorrect;
-      doc.setFont('helvetica','normal'); doc.setFontSize(9);
-      doc.setTextColor(isOk ? 0 : 180, isOk ? 120 : 0, isOk ? 0 : 0);
-      const lines = doc.splitTextToSize(`${i+1}. ${q.text}`, W-28);
-      doc.text(lines, 14, y); y += lines.length * 5;
-      doc.setTextColor(60,60,80);
-      doc.text(`   Respuesta: ${selected ? selected.text : 'Sin responder'} ${isOk?'✓':'✗'}`, 14, y); y += 6;
-    });
-  }
-
-  y += 8;
-  doc.setFontSize(8); doc.setTextColor(150,150,170);
-  doc.text(`Generado por MusiTest · ${new Date().toLocaleString('es-ES')}`, W/2, y, { align:'center' });
-  doc.save(`musitest-resultado-${(user?.name||'estudiante').replace(/\s+/g,'-').toLowerCase()}.pdf`);
-}
-
-// ─────────────────────────────────────────────────────────────────
-// ADMIN DASHBOARD
-// ─────────────────────────────────────────────────────────────────
-function loadAdminDashboard() {
-  setupAdminNav();
-  showPage('admin');
-  switchAdminTab('overview');
-  loadAdminOverview();
-  loadTestsLibrary();
-  loadAdminStudents();
-}
-
-function setupAdminNav() {
-  document.getElementById('nav-links').innerHTML = `
-    <button class="nav-link" onclick="switchAdminTab('overview');showPage('admin');">📊 General</button>
-    <button class="nav-link" onclick="switchAdminTab('tests');showPage('admin');">📝 Tests</button>
-    <button class="nav-link" onclick="switchAdminTab('students');showPage('admin');">👥 Estudiantes</button>
-    <button class="nav-link" onclick="switchAdminTab('control');showPage('admin');">🎛 Control</button>
-  `;
-  document.getElementById('nav-user').innerHTML = `
-    <div class="avatar" style="background:rgba(245,158,11,.2);color:var(--c-warn);border-color:rgba(245,158,11,.3);">AD</div>
-    <span style="font-size:.85rem;font-weight:600;">Admin</span>
-  `;
-}
-
-window.switchAdminTab = function(tab) {
-  document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display='none');
-  document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
-  document.getElementById('admin-tab-'+tab).style.display = 'block';
-  const tabs = document.querySelectorAll('.admin-tab');
-  const map = { overview:0, tests:1, students:2, control:3 };
-  if(tabs[map[tab]]) tabs[map[tab]].classList.add('active');
-  if(tab === 'control') loadExamControl();
-};
-
-async function loadAdminOverview() {
-  // Students count
-  const sSnap = await get(ref(db, 'students'));
-  const studentCount = sSnap.exists() ? Object.keys(sSnap.val()).length : 0;
-  document.getElementById('a-stat-students').textContent = studentCount;
-
-  // Tests count
-  const tSnap = await get(ref(db, 'tests'));
-  const testCount = tSnap.exists() ? Object.keys(tSnap.val()).length : 0;
-  document.getElementById('a-stat-tests').textContent = testCount;
-
-  // Live students
-  const fiveMin = Date.now() - 5*60*1000;
-  let online = 0, liveHtml = '';
-  if(sSnap.exists()) {
-    sSnap.forEach(c => {
-      const d = c.val();
-      if((d.lastSeen||0) > fiveMin) {
-        online++;
-        liveHtml += `<div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--c-border);">
-          <div class="avatar" style="width:32px;height:32px;font-size:.75rem;">${initials(d.name)}</div>
-          <div><div style="font-size:.88rem;font-weight:600;">${d.name}</div><div style="font-size:.75rem;color:var(--c-text3);">${d.level}</div></div>
-          <div class="live-dot" style="margin-left:auto;"></div>
-        </div>`;
-      }
-    });
-  }
-  document.getElementById('a-stat-online').textContent = online;
-  document.getElementById('admin-live-list').innerHTML = liveHtml || '<p style="font-size:.85rem;color:var(--c-text3);">Sin estudiantes activos.</p>';
-
-  // Exam finished count
-  const examSnap = await get(ref(db, 'activeExam/results'));
-  let finished = 0;
-  if(examSnap.exists()) { examSnap.forEach(c => { if(c.val().submitted) finished++; }); }
-  document.getElementById('a-stat-finished').textContent = finished;
-}
-
-// ─────────────────────────────────────────────────────────────────
-// TESTS LIBRARY
-// ─────────────────────────────────────────────────────────────────
-async function loadTestsLibrary() {
-  const snap = await get(ref(db, 'tests'));
-  const container = document.getElementById('tests-library');
-  if(!snap.exists()) { container.innerHTML = '<p style="font-size:.85rem;color:var(--c-text3);">No hay tests aún. Crea el primero.</p>'; return; }
-
-  let html = '';
-  snap.forEach(c => {
-    const t = c.val();
-    const qCount = t.questions ? Object.keys(t.questions).length : 0;
-    html += `
-      <div class="card card-hover mb-2" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-        <div>
-          <div style="font-weight:700;">${t.name}</div>
-          <div style="font-size:.82rem;color:var(--c-text3);margin-top:3px;">${t.description||'Sin descripción'} · <span class="badge badge-primary">${qCount} preguntas</span></div>
-        </div>
-        <div class="flex gap-1" style="flex-wrap:wrap;">
-          <button class="btn btn-secondary btn-sm" onclick="duplicateTest('${c.key}')">📋 Duplicar</button>
-          <button class="btn btn-secondary btn-sm" onclick="editTest('${c.key}')">✏️ Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteTest('${c.key}')">🗑</button>
-        </div>
-      </div>
-    `;
-  });
-  container.innerHTML = html;
-}
-
-window.previewTest = function() {
-  const txt = document.getElementById('test-questions-txt').value;
-  const q = parseTxt(txt);
-  const prev = document.getElementById('import-preview');
-  const prevText = document.getElementById('import-preview-text');
-  if(q.length === 0) { prevText.textContent = '⚠️ No se detectaron preguntas. Verifica el formato.'; prev.style.display='block'; return; }
-  prevText.textContent = `✅ Se detectaron ${q.length} preguntas correctamente.`;
-  prev.style.display = 'block';
-};
-
-window.saveTest = async function() {
-  const name = document.getElementById('test-name-input').value.trim();
-  const desc = document.getElementById('test-desc-input').value.trim();
-  const txt = document.getElementById('test-questions-txt').value;
-  if(!name) { toast('Escribe un nombre para el test','error'); return; }
-  const questions = txtToStorable(txt);
-  if(!questions.length) { toast('No se detectaron preguntas válidas','error'); return; }
-
-  const newRef = push(ref(db, 'tests'));
-  const qObj = {};
-  questions.forEach((q, i) => { qObj[`q${i}`] = q; });
-  await set(newRef, { name, description: desc, createdAt: Date.now(), questions: qObj });
-  closeModal('modal-create-test');
-  document.getElementById('test-name-input').value = '';
-  document.getElementById('test-desc-input').value = '';
-  document.getElementById('test-questions-txt').value = '';
-  document.getElementById('import-preview').style.display = 'none';
-  toast('Test guardado exitosamente 📝');
-  loadTestsLibrary();
-};
-
-window.loadTxtFile = function(input) {
-  const file = input.files[0];
-  if(!file) return;
-  const r = new FileReader();
-  r.onload = e => { document.getElementById('test-questions-txt').value = e.target.result; toast('Archivo cargado ✓'); };
-  r.readAsText(file, 'UTF-8');
-};
-
-window.editTest = async function(id) {
-  const snap = await get(ref(db, `tests/${id}`));
-  if(!snap.exists()) return;
-  const t = snap.val();
-  document.getElementById('edit-test-id').value = id;
-  document.getElementById('edit-test-name').value = t.name;
-  document.getElementById('edit-test-desc').value = t.description || '';
-  // Convert questions back to txt format
-  let txt = '';
-  if(t.questions) {
-    const qs = Object.values(t.questions);
-    qs.forEach((q, i) => {
-      txt += `${i+1}. ${q.text}\n`;
-      q.options.forEach((opt, oi) => {
-        const letters = ['A','B','C','D'];
-        const isCorrect = opt === q.correctOption;
-        txt += `${letters[oi]}. ${opt}${isCorrect?' R':''}\n`;
-      });
-      txt += '\n';
-    });
-  }
-  document.getElementById('edit-test-txt').value = txt.trim();
-  showModal('modal-edit-test');
-};
-
-window.saveEditTest = async function() {
-  const id = document.getElementById('edit-test-id').value;
-  const name = document.getElementById('edit-test-name').value.trim();
-  const desc = document.getElementById('edit-test-desc').value.trim();
-  const txt = document.getElementById('edit-test-txt').value;
-  if(!name) { toast('El nombre no puede estar vacío','error'); return; }
-  const questions = txtToStorable(txt);
-  if(!questions.length) { toast('No se detectaron preguntas','error'); return; }
-  const qObj = {};
-  questions.forEach((q, i) => { qObj[`q${i}`] = q; });
-  await update(ref(db, `tests/${id}`), { name, description: desc, questions: qObj });
-  closeModal('modal-edit-test');
-  toast('Test actualizado ✓');
-  loadTestsLibrary();
-};
-
-window.duplicateTest = async function(id) {
-  const snap = await get(ref(db, `tests/${id}`));
-  if(!snap.exists()) return;
-  const t = snap.val();
-  const newRef = push(ref(db, 'tests'));
-  await set(newRef, { ...t, name: t.name+' (Copia)', createdAt: Date.now() });
-  toast('Test duplicado ✓');
-  loadTestsLibrary();
-};
-
-window.deleteTest = function(id) {
-  showConfirm('Eliminar test', '¿Seguro que quieres eliminar este test? Esta acción es irreversible.', async () => {
-    await remove(ref(db, `tests/${id}`));
-    toast('Test eliminado','error');
-    loadTestsLibrary();
-  });
-};
-
-// ─────────────────────────────────────────────────────────────────
-// ADMIN STUDENTS
-// ─────────────────────────────────────────────────────────────────
-async function loadAdminStudents() {
-  const snap = await get(ref(db, 'students'));
-  const tbody = document.getElementById('admin-students-tbody');
-  if(!snap.exists()) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--c-text3);padding:20px;">Sin estudiantes.</td></tr>'; return; }
-  let rows = '';
-  snap.forEach(c => {
-    const d = c.val();
-    const history = d.history ? Object.values(d.history) : [];
-    const avg = history.length ? Math.round(history.reduce((a,b)=>a+(b.pct||0),0)/history.length) : null;
-    rows += `
-      <tr>
-        <td><span style="font-family:'DM Mono',monospace;font-size:.85rem;">${d.username}</span></td>
-        <td><div class="flex items-center gap-1"><div class="avatar" style="width:28px;height:28px;font-size:.65rem;">${initials(d.name)}</div>${d.name}</div></td>
-        <td><span class="badge badge-primary">${d.level}</span></td>
-        <td>${history.length}</td>
-        <td>${avg !== null ? avg+'%' : '—'}</td>
-        <td>
-          <div class="flex gap-1">
-            <button class="btn btn-secondary btn-sm" onclick="editStudentModal('${c.key}','${d.name.replace(/'/g,'\\'')}','${d.level}')">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteStudent('${c.key}')">🗑</button>
-          </div>
-        </td>
-      </tr>
-    `;
-  });
-  tbody.innerHTML = rows;
-}
-
-window.adminAddStudent = async function() {
-  const name = document.getElementById('add-s-name').value.trim();
-  const user = document.getElementById('add-s-user').value.trim().toLowerCase();
-  const pass = document.getElementById('add-s-pass').value;
-  const level = document.getElementById('add-s-level').value;
-  if(!name||!user||!pass) { toast('Completa todos los campos','error'); return; }
-
-  const snap = await get(ref(db,'students'));
-  if(snap.exists()) {
-    let exists = false;
-    snap.forEach(c => { if(c.val().username === user) exists = true; });
-    if(exists) { toast('Ese usuario ya existe','error'); return; }
-  }
-  const newRef = push(ref(db,'students'));
-  await set(newRef, { username:user, password:pass, name, level, history:{}, createdAt:Date.now(), lastSeen:0 });
-  closeModal('modal-add-student');
-  toast('Estudiante agregado ✓');
-  loadAdminStudents();
-};
-
-window.editStudentModal = function(uid, name, level) {
-  document.getElementById('edit-s-uid').value = uid;
-  document.getElementById('edit-s-name').value = name;
-  document.getElementById('edit-s-pass').value = '';
-  document.getElementById('edit-s-level').value = level;
-  showModal('modal-edit-student');
-};
-
-window.saveEditStudent = async function() {
-  const uid = document.getElementById('edit-s-uid').value;
-  const name = document.getElementById('edit-s-name').value.trim();
-  const pass = document.getElementById('edit-s-pass').value;
-  const level = document.getElementById('edit-s-level').value;
-  const updates = { name, level };
-  if(pass) updates.password = pass;
-  await update(ref(db,`students/${uid}`), updates);
-  closeModal('modal-edit-student');
-  toast('Estudiante actualizado ✓');
-  loadAdminStudents();
-};
-
-window.deleteStudent = function(uid) {
-  showConfirm('Eliminar estudiante','¿Seguro? Se eliminarán todos sus datos y resultados.', async () => {
-    await remove(ref(db,`students/${uid}`));
-    toast('Estudiante eliminado','error');
-    loadAdminStudents();
-    loadAdminOverview();
-  });
-};
-
-// ─────────────────────────────────────────────────────────────────
-// EXAM CONTROL (Admin)
-// ─────────────────────────────────────────────────────────────────
-async function loadExamControl() {
-  const snap = await get(ref(db,'tests'));
-  const sel = document.getElementById('exam-test-select');
-  sel.innerHTML = '<option value="">— Seleccionar test —</option>';
-  if(snap.exists()) {
-    snap.forEach(c => {
-      const t = c.val();
-      const qCount = t.questions ? Object.keys(t.questions).length : 0;
-      const opt = document.createElement('option');
-      opt.value = c.key; opt.textContent = `${t.name} (${qCount} preguntas)`;
-      sel.appendChild(opt);
-    });
-  }
-  watchExamControlState();
-}
-
-function watchExamControlState() {
-  const unsub = onValue(ref(db,'activeExam'), snap => {
-    const data = snap.val();
-    const btnStart = document.getElementById('btn-start-exam');
-    const btnStop = document.getElementById('btn-stop-exam');
-    const btnRelease = document.getElementById('btn-release-results');
-    const statusEl = document.getElementById('exam-status-display');
-
-    if(!data || data.status === 'idle') {
-      btnStart.disabled = false; btnStop.disabled = true; btnRelease.disabled = true;
-      statusEl.innerHTML = '<span class="badge badge-warn">Sin examen activo</span>';
-      document.getElementById('admin-exam-progress-list').innerHTML = '<p style="font-size:.85rem;">Inicia un examen para ver el progreso.</p>';
-      return;
-    }
-
-    if(data.status === 'active') {
-      btnStart.disabled = true; btnStop.disabled = false;
-      btnRelease.disabled = !!data.resultsReleased;
-      statusEl.innerHTML = `
-        <div class="flex items-center gap-2 mb-2">
-          <div class="live-dot"></div>
-          <span class="badge badge-success">Examen en curso</span>
-        </div>
-        <div style="font-size:.85rem;color:var(--c-text2);">Test: <strong>${data.testName}</strong></div>
-        <div style="font-size:.85rem;color:var(--c-text2);">Duración: ${data.duration} min</div>
-        ${data.resultsReleased ? '<div class="badge badge-accent mt-1">Resultados publicados</div>' : ''}
-      `;
-
-      // Live progress
-      if(data.results) {
-        let rows = '';
-        Object.entries(data.results).forEach(([uid, r]) => {
-          const pct = r.submitted ? r.pct : Math.round(((r.progress||0)/r.total||1)*100);
-          rows += `
-            <div class="flex items-center gap-2" style="padding:10px 0;border-bottom:1px solid var(--c-border);">
-              <div class="avatar" style="width:30px;height:30px;font-size:.7rem;">${initials(r.studentName||'?')}</div>
-              <div style="flex:1;">
-                <div style="font-size:.88rem;font-weight:600;">${r.studentName||'Estudiante'}</div>
-                <div class="progress-bar mt-1" style="height:4px;"><div class="progress-fill ${r.submitted?'success':''}" style="width:${pct}%"></div></div>
-              </div>
-              <div>
-                ${r.submitted 
-                  ? `<span class="badge badge-success">Finalizado ${r.pct}%</span>` 
-                  : `<span class="badge badge-warn">${r.progress||0}/${r.total||'?'} resp.</span>`}
-              </div>
+    <div id="app-container">
+        
+        <section id="view-auth" class="view-section active">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="logo-icon">🎼</div>
+                    <h1>MUSITEST</h1>
+                    <p>Evaluaciones Educativas en Tiempo Real</p>
+                </div>
+                
+                <div class="auth-tabs">
+                    <button id="tab-login" class="auth-tab active">Iniciar Sesión</button>
+                    <button id="tab-register" class="auth-tab">Registrarse</button>
+                </div>
+
+                <form id="auth-form">
+                    <div class="form-group">
+                        <label for="auth-username">Usuario</label>
+                        <input type="text" id="auth-username" required autocomplete="username" placeholder="ej. juan.perez">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="auth-password">Contraseña</label>
+                        <input type="password" id="auth-password" required autocomplete="current-password" placeholder="••••••••">
+                    </div>
+
+                    <div id="register-fields" class="hidden-fields">
+                        <div class="form-group">
+                            <label for="auth-fullname">Nombre Completo</label>
+                            <input type="text" id="auth-fullname" placeholder="Juan Pérez Choque">
+                        </div>
+                        <div class="form-group">
+                            <label for="auth-level">Nivel Académico</label>
+                            <select id="auth-level">
+                                <optgroup label="PRIMARIA">
+                                    <option value="1ro Primaria">1ro Primaria</option>
+                                    <option value="2do Primaria">2do Primaria</option>
+                                    <option value="3ro Primaria">3ro Primaria</option>
+                                    <option value="4to Primaria">4to Primaria</option>
+                                    <option value="5to Primaria">5to Primaria</option>
+                                    <option value="6to Primaria">6to Primaria</option>
+                                </optgroup>
+                                <optgroup label="SECUNDARIA">
+                                    <option value="1ro Secundaria">1ro Secundaria</option>
+                                    <option value="2do Secundaria">2do Secundaria</option>
+                                    <option value="3ro Secundaria">3ro Secundaria</option>
+                                    <option value="4to Secundaria">4to Secundaria</option>
+                                    <option value="5to Secundaria">5to Secundaria</option>
+                                    <option value="6to Secundaria">6to Secundaria</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="auth-submit-btn" class="btn btn-primary">Ingresar a la Plataforma</button>
+                </form>
             </div>
-          `;
-        });
-        document.getElementById('admin-exam-progress-list').innerHTML = rows || '<p style="font-size:.85rem;">Esperando estudiantes...</p>';
-      }
-    }
-  });
-  state.examListeners.push(unsub);
-}
+        </section>
 
-window.adminStartExam = async function() {
-  const testId = document.getElementById('exam-test-select').value;
-  const duration = parseInt(document.getElementById('exam-duration').value) || 30;
-  if(!testId) { toast('Selecciona un test primero','error'); return; }
+        <section id="view-student-dashboard" class="view-section">
+            <header class="main-header">
+                <div class="user-meta">
+                    <span class="user-avatar">🎓</span>
+                    <div>
+                        <h2 id="student-display-name">Estudiante</h2>
+                        <span id="student-display-level" class="badge">Nivel</span>
+                    </div>
+                </div>
+                <button id="btn-logout" class="btn btn-secondary btn-sm">Cerrar Sesión</button>
+            </header>
 
-  const testSnap = await get(ref(db,`tests/${testId}`));
-  if(!testSnap.exists()) { toast('Test no encontrado','error'); return; }
-  const testData = testSnap.val();
+            <main class="dashboard-layout">
+                <div class="card live-exam-card">
+                    <h3>🔔 Estado de Evaluación</h3>
+                    <div id="exam-status-container" class="status-box empty">
+                        <p>No hay ninguna evaluación activa en este momento. Espera a que tu docente inicie el test.</p>
+                        <div class="pulse-loader"></div>
+                    </div>
+                </div>
 
-  await set(ref(db,'activeExam'), {
-    status: 'active',
-    testId,
-    testName: testData.name,
-    duration,
-    startedAt: Date.now(),
-    resultsReleased: false,
-    results: {}
-  });
-  toast(`Examen iniciado: ${testData.name} 🚀`);
-};
+                <div class="card history-card">
+                    <h3>📊 Tu Historial de Rendimiento</h3>
+                    <div class="stats-grid-mini">
+                        <div class="stat-mini">
+                            <span class="stat-label">Promedio General</span>
+                            <span id="student-avg-score" class="stat-value">0%</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-label">Tests Completados</span>
+                            <span id="student-total-tests" class="stat-value">0</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Evaluación</th>
+                                    <th>Fecha</th>
+                                    <th>Puntaje</th>
+                                    <th>Rendimiento</th>
+                                    <th>Reporte</th>
+                                </tr>
+                            </thead>
+                            <tbody id="student-history-tbody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </section>
 
-window.adminStopExam = function() {
-  showConfirm('Detener examen','¿Seguro? Los estudiantes que no terminaron perderán su progreso.', async () => {
-    await set(ref(db,'activeExam/status'),'idle');
-    toast('Examen detenido','error');
-  });
-};
+        <section id="view-exam-environment" class="view-section lock-environment">
+            <div class="exam-top-bar">
+                <div class="exam-meta">
+                    <span class="exam-badge-live">EXAMEN EN VIVO</span>
+                    <h2 id="exam-title-display">Evaluación en Curso</h2>
+                </div>
+                <div class="exam-timer">
+                    <span class="timer-icon">⏱️</span>
+                    <span id="exam-timer-clock">00:00</span>
+                </div>
+            </div>
 
-window.adminReleaseResults = function() {
-  showConfirm('Publicar resultados','¿Publicar resultados a todos los estudiantes?', async () => {
-    await update(ref(db,'activeExam'), { resultsReleased: true });
-    toast('¡Resultados publicados! Los estudiantes pueden verlos ahora 📢');
-  });
-};
+            <div class="progress-bar-container">
+                <div id="exam-progress-fill" class="progress-bar-fill" style="width: 0%"></div>
+            </div>
 
-// ─────────────────────────────────────────────────────────────────
-// TXT DRAG & DROP
-// ─────────────────────────────────────────────────────────────────
-const dropArea = document.getElementById('txt-drop-area');
-if(dropArea) {
-  dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('drag'); });
-  dropArea.addEventListener('dragleave', () => dropArea.classList.remove('drag'));
-  dropArea.addEventListener('drop', e => {
-    e.preventDefault(); dropArea.classList.remove('drag');
-    const file = e.dataTransfer.files[0];
-    if(file && file.name.endsWith('.txt')) {
-      const r = new FileReader();
-      r.onload = ev => { document.getElementById('test-questions-txt').value = ev.target.result; toast('Archivo cargado ✓'); };
-      r.readAsText(file,'UTF-8');
-    }
-  });
-}
+            <main class="exam-workspace">
+                <div id="question-card" class="question-card animate-fade">
+                    <div class="question-counter">Pregunta <span id="current-q-index">1</span> de <span id="total-q-count">10</span></div>
+                    <h3 id="question-text-display">¿Cargando pregunta?</h3>
+                    
+                    <div id="options-grid" class="options-grid">
+                        </div>
+                </div>
+            </main>
 
-// Kick off: show landing
-showPage('landing');
-</script>
+            <footer class="exam-footer">
+                <p>⚠️ El modo examen está bloqueado. Si recargas o cambias de dispositivo, tu progreso se mantendrá intacto.</p>
+            </footer>
+        </section>
+
+        <section id="view-waiting-results" class="view-section">
+            <div class="waiting-card text-center">
+                <div class="waiting-icon">🔒</div>
+                <h2>¡Evaluación Finalizada con Éxito!</h2>
+                <p class="lead">Tus respuestas han sido procesadas y guardadas de forma segura en el servidor central.</p>
+                <div class="info-alert">
+                    <p>Los resultados detallados se encuentran bloqueados por el docente. Se mostrarán simultáneamente en pantalla cuando el administrador libere las calificaciones.</p>
+                </div>
+                <div class="spinner"></div>
+                <p class="subtext">Esperando liberación de datos en tiempo real...</p>
+            </div>
+        </section>
+
+        <section id="view-admin-dashboard" class="view-section">
+            <header class="main-header admin-header">
+                <div class="logo-area">
+                    <span class="logo-icon">🎼</span>
+                    <div>
+                        <h2>MUSITEST CONTROL PANEL</h2>
+                        <span>Consola de Administración Centralizada</span>
+                    </div>
+                </div>
+                <button id="btn-admin-exit" class="btn btn-danger btn-sm">Salir de Admin</button>
+            </header>
+
+            <div class="admin-grid">
+                <aside class="admin-sidebar">
+                    <div class="card control-panel-card">
+                        <h3>⚡ Monitor de Operación Live</h3>
+                        
+                        <div class="form-group inline-group">
+                            <label>Test Seleccionado:</label>
+                            <select id="admin-active-test-selector">
+                                <option value="">-- Seleccionar de la Biblioteca --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group inline-group">
+                            <label>Duración (Minutos):</label>
+                            <input type="number" id="admin-exam-duration" value="15" min="1" max="180">
+                        </div>
+
+                        <div class="admin-actions-vertical">
+                            <button id="btn-admin-launch" class="btn btn-success w-100">🚀 Lanzar Examen a Estudiantes</button>
+                            <button id="btn-admin-stop" class="btn btn-danger w-100" disabled>🛑 Finalizar Examen Forzado</button>
+                            <button id="btn-admin-unlock-results" class="btn btn-warning w-100" disabled>🔓 Mostrar Resultados a Alumnos</button>
+                            <button id="btn-admin-reset-system" class="btn btn-secondary w-100">🔄 Limpiar Estado del Sistema</button>
+                        </div>
+                    </div>
+
+                    <div class="card stats-summary-card">
+                        <h3>📊 Métricas de Sesión Actual</h3>
+                        <div class="metric-row">
+                            <span>Estudiantes Activos:</span>
+                            <strong id="admin-count-connected">0</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Exámenes Entregados:</span>
+                            <strong id="admin-count-finished">0</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Promedio General:</span>
+                            <strong id="admin-global-average">0%</strong>
+                        </div>
+                    </div>
+                </aside>
+
+                <main class="admin-main-content">
+                    
+                    <div class="admin-tabs">
+                        <button class="admin-tab-btn active" data-target="admin-tab-monitor">🔴 Monitor en Tiempo Real</button>
+                        <button class="admin-tab-btn" data-target="admin-tab-library">📚 Biblioteca e Importador TXT</button>
+                        <button class="admin-tab-btn" data-target="admin-tab-students">👥 Gestión de Estudiantes</button>
+                    </div>
+
+                    <div id="admin-tab-monitor" class="admin-sub-view active">
+                        <div class="card table-wrapper-card">
+                            <div class="card-header-flex">
+                                <h3>Seguimiento de Respuestas de Estudiantes</h3>
+                                <span class="live-indicator">Firebase Sync Activo</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="data-table dashboard-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Estudiante</th>
+                                            <th>Nivel Académico</th>
+                                            <th>Progreso / Respuestas</th>
+                                            <th>Tiempo Empleado</th>
+                                            <th>Calificación</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-monitor-tbody">
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">No hay exámenes activos en este ciclo.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="admin-tab-library" class="admin-sub-view">
+                        <div class="card import-card">
+                            <h3>📥 Importador Inteligente de Preguntas (.TXT)</h3>
+                            <p class="subtext">Pega tu cuestionario estructurado siguiendo el formato oficial de marcas de corrección.</p>
+                            
+                            <div class="form-group">
+                                <label for="admin-test-title">Título de la Evaluación</label>
+                                <input type="text" id="admin-test-title" placeholder="Ej: Examen del Cuestionario Musical del Altiplano - Primer Trimestre">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="admin-txt-area">Estructura del Texto del Examen</label>
+                                <textarea id="admin-txt-area" rows="8" placeholder="1. ¿Cuál es la capital de Bolivia?&#10;A. Santa Cruz&#10;B. Cochabamba&#10;C. Sucre R&#10;D. La Paz"></textarea>
+                            </div>
+
+                            <button id="btn-parse-import" class="btn btn-primary">Procesar e Incorporar a la Biblioteca</button>
+                        </div>
+
+                        <div class="card library-list-card mt-4">
+                            <h3>📂 Exámenes Disponibles en la Base de Datos</h3>
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Título de la Evaluación</th>
+                                            <th>Preguntas Detectadas</th>
+                                            <th>ID Técnico</th>
+                                            <th>Acciones de Administración</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-library-tbody">
+                                        </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="admin-tab-students" class="admin-sub-view">
+                        <div class="card student-manager-card">
+                            <h3>👥 Directorio Total de Estudiantes Registrados</h3>
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Usuario Credencial</th>
+                                            <th>Contraseña</th>
+                                            <th>Nombre Completo</th>
+                                            <th>Nivel Académico</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-students-tbody">
+                                        </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </main>
+            </div>
+        </section>
+
+    </div>
+
+    <div id="print-report-container" class="print-only">
+        </div>
+
+    <footer class="app-footer">
+        <div class="footer-content">
+            <span class="copyright">© 2026 Musitest Engine. Todos los derechos reservados.</span>
+            <span class="author-credits">Kabert Pro - LMKE</span>
+            <button id="admin-trigger" class="admin-trigger-btn">🔧 Acceso Administración</button>
+        </div>
+    </footer>
+
+    <script type="module" src="script.js"></script>
 </body>
-</html>
