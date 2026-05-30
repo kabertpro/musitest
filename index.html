@@ -3,1376 +3,449 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>MusiTest — Evaluaciones Musicales Online</title>
-
-<!-- Firebase SDK -->
+<title>MusiTest - Evaluaciones Musicales Online</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
-<!-- jsPDF para exportar -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<!-- Chart.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-
 <style>
-/* ═══════════════════════════════════════════
-   MUSITEST — Design System
-   Aesthetic: Deep space music edu — dark, rich,
-   jewel tones, geometric musical motifs
-═══════════════════════════════════════════ */
-
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 :root {
-  --bg: #0a0c14;
-  --bg2: #0f1220;
-  --bg3: #151829;
-  --card: #1a1e30;
-  --card2: #1f2438;
-  --border: #2a2f4a;
-  --border2: #353c60;
-
-  --primary: #6c63ff;
-  --primary-glow: rgba(108,99,255,0.3);
-  --primary-dark: #4e46d9;
-  --accent: #00d4aa;
-  --accent2: #ff6b8a;
-  --gold: #ffd166;
-  --sky: #4cc9f0;
-
-  --text: #e8eaf6;
-  --text2: #9da3c4;
-  --text3: #5c6390;
-
-  --success: #06d6a0;
-  --error: #ef476f;
-  --warn: #ffd166;
-
-  --r: 14px;
-  --r2: 10px;
-  --r3: 8px;
-  --shadow: 0 8px 32px rgba(0,0,0,0.5);
-  --shadow2: 0 4px 16px rgba(0,0,0,0.35);
-
-  --font: 'Syne', sans-serif;
-  --body: 'DM Sans', sans-serif;
+  --bg:#0a0c14;--bg2:#0f1220;--bg3:#151829;--card:#1a1e30;--card2:#1f2438;
+  --border:#2a2f4a;--border2:#353c60;
+  --primary:#6c63ff;--pglow:rgba(108,99,255,.3);--pdark:#4e46d9;
+  --accent:#00d4aa;--gold:#ffd166;--sky:#4cc9f0;--pink:#ff6b8a;
+  --text:#e8eaf6;--text2:#9da3c4;--text3:#5c6390;
+  --ok:#06d6a0;--err:#ef476f;--warn:#ffd166;
+  --r:14px;--r2:10px;--r3:8px;
+  --sh:0 8px 32px rgba(0,0,0,.5);--sh2:0 4px 16px rgba(0,0,0,.35);
+  --font:'Syne',sans-serif;--body:'DM Sans',sans-serif;
 }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.hidden{display:none!important}
+.flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}
+.justify-center{justify-content:center}.justify-between{justify-content:space-between}
+.gap-1{gap:8px}.gap-2{gap:16px}.w-full{width:100%}.text-center{text-align:center}
+.mt-1{margin-top:8px}.mt-2{margin-top:16px}.mt-3{margin-top:24px}
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Splash ── */
+#splash{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .6s}
+#splash.fade{opacity:0;pointer-events:none}
+.splash-logo-ring{width:100px;height:100px;border-radius:28px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:52px;animation:splashPulse 1.5s ease-in-out infinite}
+@keyframes splashPulse{0%,100%{transform:scale(1);box-shadow:0 0 40px var(--pglow)}50%{transform:scale(1.06);box-shadow:0 0 80px rgba(108,99,255,.6)}}
+.splash-title{font-family:var(--font);font-size:36px;font-weight:800;background:linear-gradient(135deg,#fff 30%,var(--sky));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.splash-bar-wrap{width:200px;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.splash-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px;transition:width .1s}
+.splash-sub{font-size:12px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
 
-html { scroll-behavior: smooth; }
+/* ── Background ── */
+.bg-stars{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 20% 50%,rgba(108,99,255,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(0,212,170,.06) 0%,transparent 50%),radial-gradient(ellipse at 60% 80%,rgba(76,201,240,.05) 0%,transparent 50%);pointer-events:none}
 
-body {
-  font-family: var(--body);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-}
+/* ── Countdown overlay ── */
+#countdown-overlay{position:fixed;inset:0;z-index:8000;background:rgba(10,12,20,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+#countdown-overlay.hidden{display:none!important}
+.countdown-num{font-family:var(--font);font-size:120px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:countPop .8s ease-in-out}
+@keyframes countPop{0%{transform:scale(1.4);opacity:.4}60%{transform:scale(.95)}100%{transform:scale(1);opacity:1}}
+.countdown-label{font-size:16px;color:var(--text3);letter-spacing:3px;text-transform:uppercase}
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg2); }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+/* ── Screens ── */
+.screen{position:relative;z-index:1;min-height:100vh;display:none;flex-direction:column}
+.screen.active{display:flex}
 
-/* ── Utility ── */
-.hidden { display: none !important; }
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
-.gap-1 { gap: 8px; }
-.gap-2 { gap: 16px; }
-.gap-3 { gap: 24px; }
-.w-full { width: 100%; }
-.text-center { text-align: center; }
-.mt-1 { margin-top: 8px; }
-.mt-2 { margin-top: 16px; }
-.mt-3 { margin-top: 24px; }
+/* ── Landing ── */
+#screen-landing{align-items:center;justify-content:center;padding:24px;gap:0}
+.landing-logo{text-align:center;margin-bottom:40px}
+.logo-icon{width:76px;height:76px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:38px;box-shadow:0 0 40px var(--pglow);animation:pulseL 3s ease-in-out infinite}
+@keyframes pulseL{0%,100%{box-shadow:0 0 40px var(--pglow);transform:scale(1)}50%{box-shadow:0 0 60px rgba(108,99,255,.5);transform:scale(1.03)}}
+.logo-title{font-family:var(--font);font-size:40px;font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,#fff 30%,var(--sky));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-sub{font-size:12px;color:var(--text3);letter-spacing:3px;text-transform:uppercase;margin-top:6px}
+.landing-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:32px;width:100%;max-width:420px;box-shadow:var(--sh)}
+.landing-tabs{display:flex;gap:4px;background:var(--bg2);border-radius:var(--r2);padding:4px;margin-bottom:24px}
+.tab-btn{flex:1;padding:10px;border:none;border-radius:var(--r3);background:transparent;color:var(--text3);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.tab-btn.active{background:var(--primary);color:#fff;box-shadow:0 4px 12px var(--pglow)}
 
-/* ── Background animated ── */
-.bg-stars {
-  position: fixed; inset: 0; z-index: 0;
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(108,99,255,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(0,212,170,0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 60% 80%, rgba(76,201,240,0.05) 0%, transparent 50%);
-  pointer-events: none;
-}
-
-/* ═══════════════════
-   SCREENS
-═══════════════════ */
-.screen {
-  position: relative; z-index: 1;
-  min-height: 100vh;
-  display: none;
-  flex-direction: column;
-}
-.screen.active { display: flex; }
-
-/* ═══════════════════
-   LANDING / WELCOME
-═══════════════════ */
-#screen-landing {
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  gap: 0;
-}
-
-.landing-logo {
-  text-align: center;
-  margin-bottom: 48px;
-}
-
-.logo-icon {
-  width: 80px; height: 80px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  border-radius: 24px;
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 20px;
-  font-size: 40px;
-  box-shadow: 0 0 40px var(--primary-glow);
-  animation: pulse-logo 3s ease-in-out infinite;
-}
-
-@keyframes pulse-logo {
-  0%,100% { box-shadow: 0 0 40px var(--primary-glow); transform: scale(1); }
-  50% { box-shadow: 0 0 60px rgba(108,99,255,0.5); transform: scale(1.03); }
-}
-
-.logo-title {
-  font-family: var(--font);
-  font-size: 42px;
-  font-weight: 800;
-  letter-spacing: -1px;
-  background: linear-gradient(135deg, #fff 30%, var(--sky));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.logo-sub {
-  font-size: 13px;
-  color: var(--text3);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-top: 6px;
-  font-weight: 400;
-}
-
-.landing-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 36px;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: var(--shadow);
-}
-
-.landing-tabs {
-  display: flex;
-  gap: 4px;
-  background: var(--bg2);
-  border-radius: var(--r2);
-  padding: 4px;
-  margin-bottom: 28px;
-}
-
-.tab-btn {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: var(--r3);
-  background: transparent;
-  color: var(--text3);
-  font-family: var(--font);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all .2s;
-}
-.tab-btn.active {
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 4px 12px var(--primary-glow);
-}
-
-/* ── Form ── */
-.form-group { margin-bottom: 16px; }
-
-.form-label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text3);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.form-input, .form-select {
-  width: 100%;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--r3);
-  padding: 12px 14px;
-  color: var(--text);
-  font-family: var(--body);
-  font-size: 15px;
-  transition: border-color .2s, box-shadow .2s;
-  outline: none;
-  -webkit-appearance: none;
-}
-.form-input:focus, .form-select:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-glow);
-}
-.form-select option { background: var(--bg3); }
+/* ── Forms ── */
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+.form-input,.form-select{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-family:var(--body);font-size:15px;transition:border-color .2s,box-shadow .2s;outline:none;-webkit-appearance:none}
+.form-input:focus,.form-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--pglow)}
+.form-select option{background:var(--bg3)}
 
 /* ── Buttons ── */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: none;
-  border-radius: var(--r3);
-  font-family: var(--font);
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all .2s;
-  text-decoration: none;
-  white-space: nowrap;
-}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 18px;border:none;border-radius:var(--r3);font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--pdark));color:#fff;box-shadow:0 4px 16px var(--pglow)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--pglow)}
+.btn-accent{background:linear-gradient(135deg,var(--accent),#00a87a);color:#000;box-shadow:0 4px 16px rgba(0,212,170,.25)}
+.btn-accent:hover{transform:translateY(-2px)}
+.btn-danger{background:linear-gradient(135deg,var(--err),#c0385b);color:#fff}
+.btn-danger:hover{transform:translateY(-2px)}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-ghost:hover{background:var(--card2);color:var(--text)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#f0a500);color:#1a1200}
+.btn-gold:hover{transform:translateY(-2px)}
+.btn-sm{padding:6px 11px;font-size:12px}
+.btn-lg{padding:13px 22px;font-size:15px}
+.btn-full{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
 
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: #fff;
-  box-shadow: 0 4px 16px var(--primary-glow);
-}
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--primary-glow); }
-.btn-primary:active { transform: translateY(0); }
+/* Admin access button */
+#admin-access-btn{position:fixed;bottom:20px;right:20px;z-index:9999;background:rgba(15,18,32,.9);border:1px solid var(--border2);border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--text3);transition:all .2s;box-shadow:var(--sh2);backdrop-filter:blur(10px)}
+#admin-access-btn:hover{border-color:var(--primary);color:var(--primary)}
 
-.btn-accent {
-  background: linear-gradient(135deg, var(--accent), #00a87a);
-  color: #000;
-  box-shadow: 0 4px 16px rgba(0,212,170,0.25);
-}
-.btn-accent:hover { transform: translateY(-2px); }
+/* ── Alerts ── */
+.alert{padding:11px 14px;border-radius:var(--r3);font-size:13px;margin-bottom:14px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.alert-error{background:rgba(239,71,111,.15);border:1px solid rgba(239,71,111,.3);color:#ff6b8a}
+.alert-success{background:rgba(6,214,160,.15);border:1px solid rgba(6,214,160,.3);color:var(--ok)}
+.alert-info{background:rgba(108,99,255,.15);border:1px solid rgba(108,99,255,.3);color:#a09aff}
+.alert-warn{background:rgba(255,209,102,.15);border:1px solid rgba(255,209,102,.3);color:var(--gold)}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9999;background:var(--card2);border:1px solid var(--border2);border-radius:100px;padding:9px 18px;font-size:13px;box-shadow:var(--sh);transition:all .3s;opacity:0;pointer-events:none;white-space:nowrap;max-width:90vw}
+#toast.show{opacity:1}
 
-.btn-danger {
-  background: linear-gradient(135deg, var(--error), #c0385b);
-  color: #fff;
-}
-.btn-danger:hover { transform: translateY(-2px); }
+/* ── Nav ── */
+.app-nav{position:sticky;top:0;z-index:100;background:rgba(10,12,20,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 18px;height:58px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.nav-logo{font-family:var(--font);font-size:19px;font-weight:800;background:linear-gradient(135deg,#fff 30%,var(--sky));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-right{display:flex;align-items:center;gap:10px}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-family:var(--font)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(15,18,32,.95);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;padding:8px 0}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px;cursor:pointer;color:var(--text3);font-size:10px;font-family:var(--font);font-weight:600;transition:color .2s;border:none;background:transparent}
+.bnav-item .icon{font-size:19px}
+.bnav-item.active{color:var(--primary)}
+.content{flex:1;overflow-y:auto;padding:18px;padding-bottom:90px}
 
-.btn-ghost {
-  background: transparent;
-  border: 1px solid var(--border2);
-  color: var(--text2);
-}
-.btn-ghost:hover { background: var(--card2); color: var(--text); }
+/* ── Cards ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;box-shadow:var(--sh2)}
+.card-title{font-family:var(--font);font-size:15px;font-weight:700;margin-bottom:12px;color:var(--text)}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:14px;text-align:center}
+.stat-value{font-family:var(--font);font-size:26px;font-weight:800;line-height:1;margin-bottom:3px}
+.stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:500}
+.stat-card.primary .stat-value{color:var(--primary)}
+.stat-card.accent .stat-value{color:var(--accent)}
+.stat-card.gold .stat-value{color:var(--gold)}
+.stat-card.sky .stat-value{color:var(--sky)}
 
-.btn-gold {
-  background: linear-gradient(135deg, var(--gold), #f0a500);
-  color: #1a1200;
-}
-.btn-gold:hover { transform: translateY(-2px); }
+/* ── Exam ── */
+#screen-exam{background:var(--bg)}
+.exam-header{position:sticky;top:0;z-index:10;background:rgba(10,12,20,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+.exam-progress-wrap{flex:1}
+.exam-progress-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:flex;justify-content:space-between}
+.progress-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;transition:width .4s ease}
+.exam-timer{font-family:var(--font);font-size:21px;font-weight:800;color:var(--accent);min-width:60px;text-align:center}
+.exam-timer.warn{color:var(--warn)}
+.exam-timer.danger{color:var(--err);animation:blink .8s infinite}
+@keyframes blink{50%{opacity:.4}}
+.exam-content{flex:1;padding:22px 18px;overflow-y:auto;padding-bottom:16px}
+.question-num{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
+.question-text{font-family:var(--font);font-size:19px;font-weight:700;line-height:1.4;color:var(--text);margin-bottom:24px}
+.options-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.option-btn{width:100%;background:var(--card);border:2px solid var(--border);border-radius:var(--r2);padding:14px 16px;text-align:left;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px;color:var(--text);font-family:var(--body);font-size:14px;line-height:1.4}
+.option-letter{min-width:30px;height:30px;border-radius:50%;background:var(--bg2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:12px;font-weight:700;flex-shrink:0;transition:all .2s}
+.option-btn:hover:not(:disabled){border-color:var(--primary);background:rgba(108,99,255,.08)}
+.option-btn:hover .option-letter{background:var(--primary);color:#fff}
+.option-btn.selected{border-color:var(--primary);background:rgba(108,99,255,.15)}
+.option-btn.selected .option-letter{background:var(--primary);color:#fff;border-color:var(--primary)}
+.option-btn.correct{border-color:var(--ok);background:rgba(6,214,160,.12)}
+.option-btn.correct .option-letter{background:var(--ok);color:#000;border-color:var(--ok)}
+.option-btn.incorrect{border-color:var(--err);background:rgba(239,71,111,.1)}
+.option-btn.incorrect .option-letter{background:var(--err);color:#fff;border-color:var(--err)}
+.option-btn:disabled{cursor:not-allowed}
+.exam-nav{display:flex;justify-content:space-between;align-items:center;padding:14px 18px 18px;gap:10px;border-top:1px solid var(--border);background:var(--bg);flex-shrink:0}
 
-.btn-sm { padding: 7px 12px; font-size: 13px; }
-.btn-lg { padding: 14px 24px; font-size: 16px; }
-.btn-full { width: 100%; }
-.btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+/* Waiting */
+.waiting-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;gap:18px}
+.waiting-icon{font-size:56px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.waiting-title{font-family:var(--font);font-size:22px;font-weight:700}
+.waiting-sub{color:var(--text2);font-size:14px;line-height:1.6}
+.pulse-dots{display:flex;gap:7px;justify-content:center}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--primary);animation:dotP 1.4s ease-in-out infinite both}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes dotP{0%,100%{transform:scale(.6);opacity:.4}50%{transform:scale(1);opacity:1}}
 
-/* ── Admin access button (TOP RIGHT) ── */
-/* 
-  ╔══════════════════════════════════════════════╗
-  ║ PARA CONVERTIR A VERSIÓN ESTUDIANTE:         ║
-  ║ Agregar clase "hidden" al elemento           ║
-  ║ con id="admin-access-btn"                    ║
-  ║ O eliminarlo completamente del HTML          ║
-  ╚══════════════════════════════════════════════╝
-*/
-#admin-access-btn {
-  position: fixed;
-  bottom: 20px; right: 20px;
-  z-index: 9999;
-  background: rgba(15,18,32,0.9);
-  border: 1px solid var(--border2);
-  border-radius: 50%;
-  width: 44px; height: 44px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  font-size: 18px;
-  color: var(--text3);
-  transition: all .2s;
-  box-shadow: var(--shadow2);
-  backdrop-filter: blur(10px);
-}
-#admin-access-btn:hover { border-color: var(--primary); color: var(--primary); }
+/* Results score ring */
+.result-score-ring{width:140px;height:140px;position:relative;margin:0 auto 18px}
+.result-score-ring svg{transform:rotate(-90deg)}
+.score-circle-bg{fill:none;stroke:var(--bg3);stroke-width:12}
+.score-circle{fill:none;stroke:var(--primary);stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset 1.5s ease}
+.score-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--font);font-size:28px;font-weight:800;color:var(--text);text-align:center}
+.score-num span{font-size:12px;color:var(--text3);display:block}
 
-/* ── Alerts / Toast ── */
-.alert {
-  padding: 12px 16px;
-  border-radius: var(--r3);
-  font-size: 14px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.alert-error { background: rgba(239,71,111,0.15); border: 1px solid rgba(239,71,111,0.3); color: #ff6b8a; }
-.alert-success { background: rgba(6,214,160,0.15); border: 1px solid rgba(6,214,160,0.3); color: var(--success); }
-.alert-info { background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3); color: #a09aff; }
-.alert-warn { background: rgba(255,209,102,0.15); border: 1px solid rgba(255,209,102,0.3); color: var(--gold); }
+/* ── Admin ── */
+.admin-sidebar{position:fixed;left:0;top:0;bottom:0;width:230px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:200;transition:transform .3s}
+.admin-logo{padding:18px;border-bottom:1px solid var(--border)}
+.logo-badge{font-size:10px;background:var(--primary);color:#fff;padding:2px 7px;border-radius:100px;font-weight:700;letter-spacing:1px;display:inline-block;margin-top:3px}
+.admin-nav{flex:1;padding:10px;overflow-y:auto}
+.admin-nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--r3);cursor:pointer;color:var(--text2);font-size:13px;font-family:var(--font);font-weight:600;margin-bottom:2px;transition:all .2s;border:none;background:transparent;width:100%;text-align:left}
+.admin-nav-item:hover{background:var(--card);color:var(--text)}
+.admin-nav-item.active{background:rgba(108,99,255,.2);color:var(--primary)}
+.admin-nav-item .ni{font-size:16px;min-width:18px}
+.admin-footer{padding:14px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);text-align:center}
+.admin-main{margin-left:230px;min-height:100vh;display:flex;flex-direction:column}
+.admin-topbar{padding:14px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
+.admin-page-title{font-family:var(--font);font-size:20px;font-weight:800}
+.admin-content{flex:1;padding:22px;overflow-y:auto}
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:9px 11px;font-family:var(--font);font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)}
+.data-table td{padding:11px 11px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
+.data-table tr:hover td{background:rgba(255,255,255,.02)}
+.data-table .name-cell{color:var(--text);font-weight:500}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:700;font-family:var(--font);letter-spacing:.5px}
+.badge-primary{background:rgba(108,99,255,.2);color:var(--primary)}
+.badge-success{background:rgba(6,214,160,.2);color:var(--ok)}
+.badge-warn{background:rgba(255,209,102,.2);color:var(--gold)}
+.badge-error{background:rgba(239,71,111,.2);color:var(--err)}
+.badge-sky{background:rgba(76,201,240,.2);color:var(--sky)}
+.badge-gray{background:var(--bg3);color:var(--text3)}
 
-/* toast */
-#toast {
-  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-  z-index: 9999;
-  background: var(--card2);
-  border: 1px solid var(--border2);
-  border-radius: 100px;
-  padding: 10px 20px;
-  font-size: 14px;
-  box-shadow: var(--shadow);
-  transition: all .3s;
-  opacity: 0; pointer-events: none;
-  white-space: nowrap;
-  max-width: 90vw;
-}
-#toast.show { opacity: 1; }
+/* ── Monitor with progress bars ── */
+.monitor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.monitor-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:14px;display:flex;flex-direction:column;gap:8px;transition:border-color .3s}
+.monitor-card.done{border-color:rgba(6,214,160,.5)}
+.monitor-card.active-exam{border-color:rgba(108,99,255,.4)}
+.monitor-name{font-weight:600;font-size:13px;color:var(--text)}
+.monitor-level{font-size:10px;color:var(--text3)}
+.monitor-prog-bar-wrap{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.monitor-prog-bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;transition:width .5s ease}
+.monitor-prog-label{font-size:11px;color:var(--text2);display:flex;justify-content:space-between}
+.monitor-score{font-family:var(--font);font-size:20px;font-weight:800;color:var(--accent)}
 
-/* ═══════════════════
-   NAV / APP SHELL
-═══════════════════ */
-.app-nav {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(10,12,20,0.85);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
-  padding: 0 20px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
+/* ── Test library ── */
+.test-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.test-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;transition:border-color .2s}
+.test-card:hover{border-color:var(--primary)}
+.test-card-title{font-family:var(--font);font-size:15px;font-weight:700;margin-bottom:7px}
+.test-card-meta{font-size:11px;color:var(--text3);margin-bottom:10px}
+.test-card-actions{display:flex;gap:7px;flex-wrap:wrap}
 
-.nav-logo {
-  font-family: var(--font);
-  font-size: 20px;
-  font-weight: 800;
-  background: linear-gradient(135deg, #fff 30%, var(--sky));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.nav-user {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; color: var(--text2);
-}
-
-.avatar {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 700; color: #fff;
-  font-family: var(--font);
-}
-
-/* ── Bottom nav (student) ── */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  z-index: 100;
-  background: rgba(15,18,32,0.95);
-  backdrop-filter: blur(16px);
-  border-top: 1px solid var(--border);
-  display: flex;
-  padding: 8px 0 env(safe-area-inset-bottom, 8px);
-}
-
-.bnav-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 6px;
-  cursor: pointer;
-  color: var(--text3);
-  font-size: 11px;
-  font-family: var(--font);
-  font-weight: 600;
-  transition: color .2s;
-  border: none; background: transparent;
-}
-.bnav-item .icon { font-size: 20px; }
-.bnav-item.active { color: var(--primary); }
-
-/* ── Content area ── */
-.content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  padding-bottom: 90px;
-}
-
-/* ═══════════════════
-   CARDS
-═══════════════════ */
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: var(--shadow2);
-}
-.card-title {
-  font-family: var(--font);
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 14px;
-  color: var(--text);
-}
-
-/* ── Stat cards ── */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.stat-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r2);
-  padding: 16px;
-  text-align: center;
-}
-.stat-value {
-  font-family: var(--font);
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-.stat-label {
-  font-size: 11px;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 500;
-}
-.stat-card.primary .stat-value { color: var(--primary); }
-.stat-card.accent .stat-value { color: var(--accent); }
-.stat-card.gold .stat-value { color: var(--gold); }
-.stat-card.sky .stat-value { color: var(--sky); }
-
-/* ═══════════════════
-   EXAM SCREEN
-═══════════════════ */
-#screen-exam {
-  background: var(--bg);
-}
-
-.exam-header {
-  position: sticky; top: 0; z-index: 10;
-  background: rgba(10,12,20,0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  padding: 14px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-shrink: 0;
-}
-
-.exam-progress-wrap {
-  flex: 1;
-}
-.exam-progress-label {
-  font-size: 12px; color: var(--text3); margin-bottom: 6px;
-  display: flex; justify-content: space-between;
-}
-.progress-bar {
-  height: 6px;
-  background: var(--bg3);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--accent));
-  border-radius: 3px;
-  transition: width .4s ease;
-}
-
-.exam-timer {
-  font-family: var(--font);
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--accent);
-  min-width: 64px;
-  text-align: center;
-}
-.exam-timer.warn { color: var(--warn); }
-.exam-timer.danger { color: var(--error); animation: blink .8s infinite; }
-@keyframes blink { 50% { opacity: .4; } }
-
-.exam-content {
-  flex: 1;
-  padding: 24px 20px;
-  overflow-y: auto;
-  padding-bottom: 20px;
-}
-
-.question-num {
-  font-size: 12px;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 12px;
-}
-
-.question-text {
-  font-family: var(--font);
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.4;
-  color: var(--text);
-  margin-bottom: 28px;
-}
-
-.options-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-.option-btn {
-  width: 100%;
-  background: var(--card);
-  border: 2px solid var(--border);
-  border-radius: var(--r2);
-  padding: 16px 18px;
-  text-align: left;
-  cursor: pointer;
-  transition: all .2s;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  color: var(--text);
-  font-family: var(--body);
-  font-size: 15px;
-  line-height: 1.4;
-}
-
-.option-letter {
-  min-width: 32px; height: 32px;
-  border-radius: 50%;
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 700;
-  flex-shrink: 0;
-  transition: all .2s;
-}
-
-.option-btn:hover:not(:disabled) {
-  border-color: var(--primary);
-  background: rgba(108,99,255,0.08);
-}
-.option-btn:hover .option-letter {
-  background: var(--primary);
-  color: #fff;
-}
-
-.option-btn.selected {
-  border-color: var(--primary);
-  background: rgba(108,99,255,0.15);
-}
-.option-btn.selected .option-letter {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-}
-
-.option-btn.correct {
-  border-color: var(--success);
-  background: rgba(6,214,160,0.12);
-}
-.option-btn.correct .option-letter { background: var(--success); color: #000; border-color: var(--success); }
-
-.option-btn.incorrect {
-  border-color: var(--error);
-  background: rgba(239,71,111,0.1);
-}
-.option-btn.incorrect .option-letter { background: var(--error); color: #fff; border-color: var(--error); }
-
-.option-btn:disabled { cursor: not-allowed; }
-
-.exam-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px 20px;
-  gap: 12px;
-  border-top: 1px solid var(--border);
-  background: var(--bg);
-  flex-shrink: 0;
-}
-
-/* ── waiting screen ── */
-.waiting-screen {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 24px;
-  text-align: center;
-  gap: 20px;
-}
-
-.waiting-icon {
-  font-size: 60px;
-  animation: float 3s ease-in-out infinite;
-}
-@keyframes float {
-  0%,100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-.waiting-title {
-  font-family: var(--font);
-  font-size: 24px;
-  font-weight: 700;
-}
-.waiting-sub { color: var(--text2); font-size: 15px; line-height: 1.6; }
-
-/* pulse dots */
-.pulse-dots {
-  display: flex; gap: 8px; justify-content: center;
-}
-.dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--primary);
-  animation: dot-pulse 1.4s ease-in-out infinite both;
-}
-.dot:nth-child(2) { animation-delay: .2s; }
-.dot:nth-child(3) { animation-delay: .4s; }
-@keyframes dot-pulse {
-  0%,100% { transform: scale(.6); opacity: .4; }
-  50% { transform: scale(1); opacity: 1; }
-}
-
-/* ═══════════════════
-   RESULTS SCREEN
-═══════════════════ */
-.result-score-ring {
-  width: 140px; height: 140px;
-  position: relative;
-  margin: 0 auto 20px;
-}
-.result-score-ring svg { transform: rotate(-90deg); }
-.score-circle-bg { fill: none; stroke: var(--bg3); stroke-width: 12; }
-.score-circle { fill: none; stroke: var(--primary); stroke-width: 12; stroke-linecap: round; transition: stroke-dashoffset 1.5s ease; }
-
-.score-num {
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%,-50%);
-  font-family: var(--font);
-  font-size: 30px;
-  font-weight: 800;
-  color: var(--text);
-  text-align: center;
-}
-.score-num span { font-size: 14px; color: var(--text3); display: block; }
-
-/* ═══════════════════
-   ADMIN PANEL
-═══════════════════ */
-.admin-sidebar {
-  position: fixed;
-  left: 0; top: 0; bottom: 0;
-  width: 240px;
-  background: var(--bg2);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  z-index: 200;
-  transition: transform .3s;
-}
-
-.admin-logo {
-  padding: 20px;
-  border-bottom: 1px solid var(--border);
-}
-.admin-logo .logo-badge {
-  font-size: 11px;
-  background: var(--primary);
-  color: #fff;
-  padding: 2px 8px;
-  border-radius: 100px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  display: inline-block;
-  margin-top: 4px;
-}
-
-.admin-nav {
-  flex: 1;
-  padding: 12px;
-  overflow-y: auto;
-}
-
-.admin-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--r3);
-  cursor: pointer;
-  color: var(--text2);
-  font-size: 14px;
-  font-family: var(--font);
-  font-weight: 600;
-  margin-bottom: 2px;
-  transition: all .2s;
-  border: none;
-  background: transparent;
-  width: 100%;
-  text-align: left;
-}
-.admin-nav-item:hover { background: var(--card); color: var(--text); }
-.admin-nav-item.active { background: rgba(108,99,255,0.2); color: var(--primary); }
-.admin-nav-item .ni { font-size: 18px; min-width: 20px; }
-
-.admin-footer {
-  padding: 16px;
-  border-top: 1px solid var(--border);
-  font-size: 11px;
-  color: var(--text3);
-  text-align: center;
-}
-
-.admin-main {
-  margin-left: 240px;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.admin-topbar {
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--bg);
-}
-.admin-page-title {
-  font-family: var(--font);
-  font-size: 22px;
-  font-weight: 800;
-}
-
-.admin-content {
-  flex: 1;
-  padding: 24px;
-  overflow-y: auto;
-}
-
-/* Table */
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-.data-table th {
-  text-align: left;
-  padding: 10px 12px;
-  font-family: var(--font);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 1px solid var(--border);
-}
-.data-table td {
-  padding: 12px 12px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text2);
-  vertical-align: middle;
-}
-.data-table tr:hover td { background: rgba(255,255,255,0.02); }
-.data-table .name-cell { color: var(--text); font-weight: 500; }
-
-/* Badge */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: 100px;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: var(--font);
-  letter-spacing: .5px;
-}
-.badge-primary { background: rgba(108,99,255,0.2); color: var(--primary); }
-.badge-success { background: rgba(6,214,160,0.2); color: var(--success); }
-.badge-warn { background: rgba(255,209,102,0.2); color: var(--gold); }
-.badge-error { background: rgba(239,71,111,0.2); color: var(--error); }
-.badge-sky { background: rgba(76,201,240,0.2); color: var(--sky); }
-.badge-gray { background: var(--bg3); color: var(--text3); }
-
-/* ── Monitor cards ── */
-.monitor-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
-}
-.monitor-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r2);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.monitor-card.done { border-color: rgba(6,214,160,0.4); }
-.monitor-name { font-weight: 600; font-size: 14px; }
-.monitor-level { font-size: 11px; color: var(--text3); }
-.monitor-prog { font-size: 12px; color: var(--text2); }
-.monitor-score { font-family: var(--font); font-size: 22px; font-weight: 800; color: var(--accent); }
-
-/* ── Test library cards ── */
-.test-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-}
-.test-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 18px;
-  transition: border-color .2s;
-  cursor: pointer;
-}
-.test-card:hover { border-color: var(--primary); }
-.test-card-title { font-family: var(--font); font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-.test-card-meta { font-size: 12px; color: var(--text3); margin-bottom: 12px; }
-.test-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-
-/* ── Import textarea ── */
-.import-textarea {
-  width: 100%;
-  min-height: 280px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--r3);
-  padding: 14px;
-  color: var(--text);
-  font-family: 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.6;
-  resize: vertical;
-  outline: none;
-  transition: border-color .2s;
-}
-.import-textarea:focus { border-color: var(--primary); }
-
-/* ── Preview list ── */
-.preview-q {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--r3);
-  padding: 14px;
-  margin-bottom: 10px;
-}
-.preview-q-text { font-weight: 600; margin-bottom: 8px; }
-.preview-option {
-  font-size: 13px;
-  color: var(--text2);
-  padding: 3px 0;
-  display: flex; align-items: center; gap: 6px;
-}
-.preview-option.correct { color: var(--success); }
+/* ── Import ── */
+.import-textarea{width:100%;min-height:260px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r3);padding:13px;color:var(--text);font-family:'Courier New',monospace;font-size:12px;line-height:1.6;resize:vertical;outline:none;transition:border-color .2s}
+.import-textarea:focus{border-color:var(--primary)}
+.preview-q{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r3);padding:13px;margin-bottom:9px}
+.preview-q-text{font-weight:600;margin-bottom:7px;font-size:14px}
+.preview-option{font-size:12px;color:var(--text2);padding:2px 0;display:flex;align-items:center;gap:5px}
+.preview-option.correct{color:var(--ok)}
 
 /* ── Modal ── */
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(6px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-.modal {
-  background: var(--card);
-  border: 1px solid var(--border2);
-  border-radius: var(--r);
-  width: 100%;
-  max-width: 480px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow);
-  padding: 28px;
-}
-.modal-title {
-  font-family: var(--font);
-  font-size: 20px;
-  font-weight: 800;
-  margin-bottom: 20px;
-}
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 24px;
-}
-
-/* ── Timer setup ── */
-.timer-input {
-  width: 100%;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--r3);
-  padding: 12px;
-  color: var(--text);
-  font-size: 32px;
-  font-family: var(--font);
-  font-weight: 800;
-  text-align: center;
-  outline: none;
-}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh);padding:26px}
+.modal-title{font-family:var(--font);font-size:19px;font-weight:800;margin-bottom:18px}
+.modal-footer{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}
 
 /* ── Live indicator ── */
-.live-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--error);
-  animation: live-pulse 1.5s infinite;
-  display: inline-block;
-}
-@keyframes live-pulse {
-  0%,100% { opacity: 1; transform: scale(1); }
-  50% { opacity: .5; transform: scale(1.3); }
-}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--err);animation:livePulse 1.5s infinite;display:inline-block}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
 
-/* ═══════════════════
-   HISTORY SCREEN
-═══════════════════ */
-.history-item {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r2);
-  padding: 16px;
-  margin-bottom: 12px;
-  display: flex;
-  gap: 14px;
-  align-items: center;
-}
-.history-score-badge {
-  min-width: 56px; height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font);
-  font-size: 16px;
-  font-weight: 800;
-  color: #fff;
-  flex-shrink: 0;
-}
-.history-info { flex: 1; min-width: 0; }
-.history-title { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.history-meta { font-size: 12px; color: var(--text3); margin-top: 3px; }
+/* ── History ── */
+.history-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:center}
+.history-score-badge{min-width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
+.history-info{flex:1;min-width:0}
+.history-title{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-meta{font-size:11px;color:var(--text3);margin-top:2px}
 
-/* ═══════════════════
-   PROFILE
-═══════════════════ */
-.profile-header {
-  text-align: center;
-  padding: 30px 20px 20px;
-}
-.profile-avatar-lg {
-  width: 80px; height: 80px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  display: flex; align-items: center; justify-content: center;
-  font-size: 32px; font-weight: 800; color: #fff;
-  font-family: var(--font);
-  margin: 0 auto 14px;
-  box-shadow: 0 0 30px var(--primary-glow);
-}
-.profile-name { font-family: var(--font); font-size: 22px; font-weight: 800; }
-.profile-level { color: var(--text3); font-size: 13px; margin-top: 4px; }
+/* ── Profile ── */
+.profile-header{text-align:center;padding:28px 18px 18px}
+.profile-avatar-lg{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;color:#fff;font-family:var(--font);margin:0 auto 12px;box-shadow:0 0 30px var(--pglow)}
 
-/* ═══════════════════
-   ADMIN LOGIN
-═══════════════════ */
-#screen-admin-login {
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
+/* ── Admin login ── */
+#screen-admin-login{align-items:center;justify-content:center;padding:24px}
 
-/* ═══════════════════
-   RESPONSIVE — MOBILE
-═══════════════════ */
-@media (max-width: 768px) {
-  .admin-sidebar {
-    transform: translateX(-100%);
-  }
-  .admin-sidebar.open {
-    transform: translateX(0);
-  }
-  .admin-main {
-    margin-left: 0;
-  }
-  .admin-topbar .menu-btn {
-    display: flex;
-  }
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .test-grid {
-    grid-template-columns: 1fr;
-  }
-  .monitor-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .data-table { font-size: 13px; }
-  .data-table th, .data-table td { padding: 10px 8px; }
-  .question-text { font-size: 17px; }
-}
+/* ── Footer ── */
+.site-footer{text-align:center;padding:18px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);letter-spacing:1px}
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199;display:none}
+.sidebar-overlay.show{display:block}
+.divider{height:1px;background:var(--border);margin:14px 0}
+.chip{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:100px;font-size:11px;background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.empty-state{text-align:center;padding:44px 18px;color:var(--text3)}
+.empty-state .empty-icon{font-size:44px;margin-bottom:10px}
+.empty-state h3{font-family:var(--font);font-size:16px;color:var(--text2);margin-bottom:7px}
+.empty-state p{font-size:13px;line-height:1.5}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:9px}
+.section-title{font-family:var(--font);font-size:17px;font-weight:700}
 
-@media (min-width: 769px) {
-  .menu-btn { display: none !important; }
-  .bottom-nav { display: none !important; }
-  .content { padding-bottom: 30px; }
-  .landing-card { padding: 44px; }
-}
+/* Score animation */
+@keyframes scorePop{0%{transform:scale(0.5);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.score-animate{animation:scorePop .6s ease forwards}
 
-/* ═══════════════════
-   FOOTER
-═══════════════════ */
-.site-footer {
-  text-align: center;
-  padding: 20px;
-  font-size: 11px;
-  color: var(--text3);
-  border-top: 1px solid var(--border);
-  letter-spacing: 1px;
+/* Responsive */
+@media(max-width:768px){
+  .admin-sidebar{transform:translateX(-100%)}
+  .admin-sidebar.open{transform:translateX(0)}
+  .admin-main{margin-left:0}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .test-grid{grid-template-columns:1fr}
+  .monitor-grid{grid-template-columns:repeat(2,1fr)}
+  .data-table{font-size:12px}
+  .data-table th,.data-table td{padding:9px 7px}
+  .question-text{font-size:16px}
 }
-
-/* ── Admin overlay for mobile ── */
-.sidebar-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 199;
-  display: none;
-}
-.sidebar-overlay.show { display: block; }
-
-/* extra utils */
-.divider {
-  height: 1px;
-  background: var(--border);
-  margin: 16px 0;
-}
-.chip {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 4px 10px;
-  border-radius: 100px;
-  font-size: 12px;
-  background: var(--bg3);
-  color: var(--text2);
-  border: 1px solid var(--border);
-}
-.empty-state {
-  text-align: center;
-  padding: 48px 20px;
-  color: var(--text3);
-}
-.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
-.empty-state h3 { font-family: var(--font); font-size: 18px; color: var(--text2); margin-bottom: 8px; }
-.empty-state p { font-size: 14px; line-height: 1.5; }
-
-.section-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.section-title {
-  font-family: var(--font);
-  font-size: 18px;
-  font-weight: 700;
+@media(min-width:769px){
+  .menu-btn{display:none!important}
+  .bottom-nav{display:none!important}
+  .content{padding-bottom:28px}
+  .landing-card{padding:40px}
 }
 </style>
 </head>
 <body>
-
 <div class="bg-stars"></div>
 
-<!-- ═══ TOAST ═══ -->
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo-ring">&#9836;</div>
+  <div class="splash-title">MusiTest</div>
+  <div class="splash-sub">Cargando plataforma...</div>
+  <div class="splash-bar-wrap"><div class="splash-bar" id="splash-bar"></div></div>
+</div>
+
+<!-- COUNTDOWN -->
+<div id="countdown-overlay" class="hidden">
+  <div class="countdown-label">La evaluacion comienza en</div>
+  <div class="countdown-num" id="countdown-num">3</div>
+  <div style="color:var(--text3);font-size:13px">Prepara tu respuestas</div>
+</div>
+
 <div id="toast"></div>
 
-<!-- ═══════════════════════════════════════
-     ADMIN ACCESS BUTTON
-     Para versión estudiante: eliminar o agregar clase "hidden"
-═══════════════════════════════════════ -->
-<button id="admin-access-btn" onclick="App.showAdminLogin()" title="Acceso Administrador">⚙️</button>
+<!--
+  ╔═══════════════════════════════════════════════╗
+  ║ BOTON ADMIN - Para version estudiante:        ║
+  ║ Agregar class="hidden" a este elemento        ║
+  ╚═══════════════════════════════════════════════╝
+-->
+<button id="admin-access-btn" onclick="App.showAdminLogin()" title="Administrador">&#9881;</button>
 
-<!-- ══════════════════════════════════════
-     SCREEN: LANDING / LOGIN / REGISTER
-══════════════════════════════════════ -->
+<!-- LANDING -->
 <div id="screen-landing" class="screen active">
   <div class="landing-logo">
-    <div class="logo-icon">🎼</div>
+    <div class="logo-icon">&#9836;</div>
     <div class="logo-title">MusiTest</div>
     <div class="logo-sub">Evaluaciones Musicales Online</div>
   </div>
-
   <div class="landing-card">
     <div class="landing-tabs">
-      <button class="tab-btn active" onclick="App.showTab('login')">Iniciar Sesión</button>
+      <button class="tab-btn active" onclick="App.showTab('login')">Iniciar Sesion</button>
       <button class="tab-btn" onclick="App.showTab('register')">Registrarse</button>
     </div>
-
-    <!-- Login Form -->
     <div id="tab-login">
       <div id="login-alert"></div>
-      <div class="form-group">
-        <label class="form-label">Usuario</label>
-        <input class="form-input" id="login-user" type="text" placeholder="Tu usuario" autocomplete="username">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Contraseña</label>
-        <input class="form-input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password">
-      </div>
-      <button class="btn btn-primary btn-full btn-lg mt-2" onclick="App.login()">
-        Entrar →
-      </button>
+      <div class="form-group"><label class="form-label">Usuario</label><input class="form-input" id="login-user" type="text" placeholder="Tu usuario" autocomplete="username"></div>
+      <div class="form-group"><label class="form-label">Contrasena</label><input class="form-input" id="login-pass" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password"></div>
+      <button class="btn btn-primary btn-full btn-lg mt-2" onclick="App.login()">Entrar</button>
     </div>
-
-    <!-- Register Form -->
     <div id="tab-register" class="hidden">
       <div id="register-alert"></div>
-      <div class="form-group">
-        <label class="form-label">Nombre completo</label>
-        <input class="form-input" id="reg-name" type="text" placeholder="Juan Pérez">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Usuario</label>
-        <input class="form-input" id="reg-user" type="text" placeholder="Ej: juan_perez">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Contraseña</label>
-        <input class="form-input" id="reg-pass" type="password" placeholder="Mínimo 6 caracteres">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Nivel académico</label>
+      <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" id="reg-name" type="text" placeholder="Juan Perez"></div>
+      <div class="form-group"><label class="form-label">Usuario</label><input class="form-input" id="reg-user" type="text" placeholder="juan_perez"></div>
+      <div class="form-group"><label class="form-label">Contrasena</label><input class="form-input" id="reg-pass" type="password" placeholder="Minimo 6 caracteres"></div>
+      <div class="form-group"><label class="form-label">Nivel academico</label>
         <select class="form-select" id="reg-level">
           <option value="">Selecciona tu nivel</option>
-          <optgroup label="PRIMARIA">
-            <option>1ro Primaria</option><option>2do Primaria</option>
-            <option>3ro Primaria</option><option>4to Primaria</option>
-            <option>5to Primaria</option><option>6to Primaria</option>
-          </optgroup>
-          <optgroup label="SECUNDARIA">
-            <option>1ro Secundaria</option><option>2do Secundaria</option>
-            <option>3ro Secundaria</option><option>4to Secundaria</option>
-            <option>5to Secundaria</option><option>6to Secundaria</option>
-          </optgroup>
+          <optgroup label="PRIMARIA"><option>1ro Primaria</option><option>2do Primaria</option><option>3ro Primaria</option><option>4to Primaria</option><option>5to Primaria</option><option>6to Primaria</option></optgroup>
+          <optgroup label="SECUNDARIA"><option>1ro Secundaria</option><option>2do Secundaria</option><option>3ro Secundaria</option><option>4to Secundaria</option><option>5to Secundaria</option><option>6to Secundaria</option></optgroup>
         </select>
       </div>
-      <button class="btn btn-accent btn-full btn-lg mt-2" onclick="App.register()">
-        Crear Cuenta →
-      </button>
+      <button class="btn btn-accent btn-full btn-lg mt-2" onclick="App.register()">Crear Cuenta</button>
     </div>
   </div>
-
   <div class="site-footer">Kabert Pro - LMKE</div>
 </div>
 
-<!-- ══════════════════════════════════════
-     SCREEN: STUDENT APP
-══════════════════════════════════════ -->
+<!-- STUDENT APP -->
 <div id="screen-student" class="screen">
   <div class="app-nav">
-    <div class="nav-logo">🎼 MusiTest</div>
+    <div class="nav-logo">&#9836; MusiTest</div>
     <div class="nav-right">
-      <div class="nav-user">
-        <div class="avatar" id="stu-avatar"></div>
-        <span id="stu-nav-name" style="display:none;font-size:13px;color:var(--text2)"></span>
-      </div>
+      <div class="avatar" id="stu-avatar"></div>
       <button class="btn btn-ghost btn-sm" onclick="App.logout()">Salir</button>
     </div>
   </div>
-
-  <!-- TAB: Dashboard -->
-  <div id="stu-tab-home" class="content">
-    <div id="exam-waiting-area"></div>
-    <div id="stu-home-content"></div>
-  </div>
-
-  <!-- TAB: History -->
-  <div id="stu-tab-history" class="content hidden">
-    <div class="section-header">
-      <div class="section-title">Historial</div>
-    </div>
-    <div id="history-list"></div>
-  </div>
-
-  <!-- TAB: Profile -->
-  <div id="stu-tab-profile" class="content hidden">
-    <div id="profile-content"></div>
-  </div>
-
-  <!-- Bottom Nav -->
-  <nav class="bottom-nav" id="student-bottom-nav">
-    <button class="bnav-item active" onclick="App.stuTab('home',this)">
-      <span class="icon">🏠</span>Home
-    </button>
-    <button class="bnav-item" onclick="App.stuTab('history',this)">
-      <span class="icon">📋</span>Historial
-    </button>
-    <button class="bnav-item" onclick="App.stuTab('profile',this)">
-      <span class="icon">👤</span>Perfil
-    </button>
+  <div id="stu-tab-home" class="content"><div id="exam-waiting-area"></div><div id="stu-home-content"></div></div>
+  <div id="stu-tab-history" class="content hidden"><div class="section-header"><div class="section-title">Historial</div></div><div id="history-list"></div></div>
+  <div id="stu-tab-profile" class="content hidden"><div id="profile-content"></div></div>
+  <nav class="bottom-nav">
+    <button class="bnav-item active" onclick="App.stuTab('home',this)"><span class="icon">&#8962;</span>Home</button>
+    <button class="bnav-item" onclick="App.stuTab('history',this)"><span class="icon">&#128203;</span>Historial</button>
+    <button class="bnav-item" onclick="App.stuTab('profile',this)"><span class="icon">&#128100;</span>Perfil</button>
   </nav>
 </div>
 
-<!-- ══════════════════════════════════════
-     SCREEN: EXAM
-══════════════════════════════════════ -->
+<!-- EXAM -->
 <div id="screen-exam" class="screen">
   <div class="exam-header">
     <div class="exam-progress-wrap">
-      <div class="exam-progress-label">
-        <span id="exam-q-label">Pregunta 1</span>
-        <span id="exam-q-count">1 / 10</span>
-      </div>
+      <div class="exam-progress-label"><span id="exam-q-label">Pregunta 1</span><span id="exam-q-count">1 / 10</span></div>
       <div class="progress-bar"><div class="progress-fill" id="exam-progress-fill" style="width:10%"></div></div>
     </div>
     <div class="exam-timer" id="exam-timer">--:--</div>
   </div>
   <div class="exam-content" id="exam-content"></div>
   <div class="exam-nav">
-    <button class="btn btn-ghost" id="exam-prev-btn" onclick="Exam.prev()">← Anterior</button>
-    <button class="btn btn-primary" id="exam-next-btn" onclick="Exam.next()">Siguiente →</button>
+    <button class="btn btn-ghost" id="exam-prev-btn" onclick="Exam.prev()">Anterior</button>
+    <button class="btn btn-primary" id="exam-next-btn" onclick="Exam.next()">Siguiente</button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     SCREEN: RESULTS (student waiting for admin)
-══════════════════════════════════════ -->
+<!-- RESULTS STUDENT -->
 <div id="screen-results" class="screen">
-  <div class="app-nav">
-    <div class="nav-logo">🎼 MusiTest</div>
-    <div class="nav-right">
-      <button class="btn btn-ghost btn-sm" onclick="App.goHome()">← Inicio</button>
-    </div>
-  </div>
+  <div class="app-nav"><div class="nav-logo">&#9836; MusiTest</div><div class="nav-right"><button class="btn btn-ghost btn-sm" onclick="App.goHome()">Inicio</button></div></div>
   <div id="results-content" class="content"></div>
 </div>
 
-<!-- ══════════════════════════════════════
-     SCREEN: ADMIN LOGIN
-══════════════════════════════════════ -->
+<!-- ADMIN LOGIN -->
 <div id="screen-admin-login" class="screen">
   <div class="landing-logo" style="margin-top:40px">
-    <div class="logo-icon">⚙️</div>
+    <div class="logo-icon">&#9881;</div>
     <div class="logo-title">Admin</div>
     <div class="logo-sub">Panel Administrativo</div>
   </div>
   <div class="landing-card">
     <div id="admin-login-alert"></div>
-    <div class="form-group">
-      <label class="form-label">Contraseña Admin</label>
-      <input class="form-input" id="admin-pass-input" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')App.adminLogin()">
-    </div>
+    <div class="form-group"><label class="form-label">Contrasena Admin</label><input class="form-input" id="admin-pass-input" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" onkeydown="if(event.key==='Enter')App.adminLogin()"></div>
     <button class="btn btn-primary btn-full btn-lg mt-2" onclick="App.adminLogin()">Acceder</button>
     <div class="divider"></div>
-    <button class="btn btn-ghost btn-full btn-sm" onclick="App.showScreen('screen-landing')">← Volver</button>
-    <div style="margin-top:16px;font-size:12px;color:var(--text3);text-align:center">Contraseña por defecto: <strong style="color:var(--text2)">admin123</strong></div>
+    <button class="btn btn-ghost btn-full btn-sm" onclick="App.showScreen('screen-landing')">Volver</button>
+    <div style="margin-top:14px;font-size:11px;color:var(--text3);text-align:center">Contrasena por defecto: <strong style="color:var(--text2)">admin123</strong></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     SCREEN: ADMIN PANEL
-══════════════════════════════════════ -->
+<!-- ADMIN PANEL -->
 <div id="screen-admin" class="screen">
-
-  <!-- Sidebar overlay (mobile) -->
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="Admin.closeSidebar()"></div>
-
-  <!-- Sidebar -->
   <div class="admin-sidebar" id="admin-sidebar">
     <div class="admin-logo">
-      <div class="nav-logo">🎼 MusiTest</div>
+      <div class="nav-logo">&#9836; MusiTest</div>
       <div class="logo-badge">ADMIN</div>
     </div>
     <nav class="admin-nav">
-      <button class="admin-nav-item active" onclick="Admin.page('dashboard',this)"><span class="ni">📊</span>Dashboard</button>
-      <button class="admin-nav-item" onclick="Admin.page('monitor',this)"><span class="ni">👁️</span>Monitor</button>
-      <button class="admin-nav-item" onclick="Admin.page('tests',this)"><span class="ni">📚</span>Biblioteca Tests</button>
-      <button class="admin-nav-item" onclick="Admin.page('import',this)"><span class="ni">📥</span>Importar TXT</button>
-      <button class="admin-nav-item" onclick="Admin.page('students',this)"><span class="ni">👥</span>Estudiantes</button>
-      <button class="admin-nav-item" onclick="Admin.page('results',this)"><span class="ni">🏆</span>Resultados</button>
+      <button class="admin-nav-item active" onclick="Admin.page('dashboard',this)"><span class="ni">&#128202;</span>Dashboard</button>
+      <button class="admin-nav-item" onclick="Admin.page('monitor',this)"><span class="ni">&#128065;</span>Monitor</button>
+      <button class="admin-nav-item" onclick="Admin.page('tests',this)"><span class="ni">&#128218;</span>Biblioteca Tests</button>
+      <button class="admin-nav-item" onclick="Admin.page('import',this)"><span class="ni">&#128229;</span>Importar TXT</button>
+      <button class="admin-nav-item" onclick="Admin.page('students',this)"><span class="ni">&#128101;</span>Estudiantes</button>
+      <button class="admin-nav-item" onclick="Admin.page('results',this)"><span class="ni">&#127942;</span>Resultados</button>
     </nav>
     <div class="admin-footer">
-      <button class="btn btn-ghost btn-sm btn-full" style="margin-bottom:8px" onclick="App.adminLogout()">Salir Admin</button>
+      <button class="btn btn-ghost btn-sm btn-full" style="margin-bottom:7px" onclick="App.adminLogout()">Salir Admin</button>
       Kabert Pro - LMKE
     </div>
   </div>
-
-  <!-- Main -->
   <div class="admin-main">
     <div class="admin-topbar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="btn btn-ghost btn-sm menu-btn" style="display:none" onclick="Admin.toggleSidebar()">☰</button>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn btn-ghost btn-sm menu-btn" style="display:none" onclick="Admin.toggleSidebar()">&#9776;</button>
         <div class="admin-page-title" id="admin-page-title">Dashboard</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px" id="admin-topbar-actions"></div>
+      <div style="display:flex;align-items:center;gap:9px" id="admin-topbar-actions"></div>
     </div>
     <div class="admin-content" id="admin-content"></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     MODALS
-══════════════════════════════════════ -->
+<!-- MODAL -->
 <div class="modal-overlay hidden" id="modal-overlay">
   <div class="modal" id="modal-box">
     <div class="modal-title" id="modal-title"></div>
@@ -1381,254 +454,208 @@ body {
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     JAVASCRIPT
-══════════════════════════════════════ -->
 <script>
-// ══════════════════════════════════════════════════
-// FIREBASE INIT
-// ══════════════════════════════════════════════════
+// ── Firebase ──────────────────────────────────────
 const firebaseConfig = {
-  apiKey: "AIzaSyCNs2oPeVaRAx7q-97QCjKzIT--wVnHS3o",
-  authDomain: "musitest-c1d2a.firebaseapp.com",
-  projectId: "musitest-c1d2a",
-  storageBucket: "musitest-c1d2a.firebasestorage.app",
-  messagingSenderId: "631952906510",
-  appId: "1:631952906510:web:0a027b9407360b52e21f5f",
-  databaseURL: "https://musitest-c1d2a-default-rtdb.firebaseio.com"
+  apiKey:"AIzaSyCNs2oPeVaRAx7q-97QCjKzIT--wVnHS3o",
+  authDomain:"musitest-c1d2a.firebaseapp.com",
+  projectId:"musitest-c1d2a",
+  storageBucket:"musitest-c1d2a.firebasestorage.app",
+  messagingSenderId:"631952906510",
+  appId:"1:631952906510:web:0a027b9407360b52e21f5f",
+  databaseURL:"https://musitest-c1d2a-default-rtdb.firebaseio.com"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ══════════════════════════════════════════════════
-// UTILITIES
-// ══════════════════════════════════════════════════
+// ── Utils ─────────────────────────────────────────
 const $ = id => document.getElementById(id);
+const LEVELS = ['1ro Primaria','2do Primaria','3ro Primaria','4to Primaria','5to Primaria','6to Primaria','1ro Secundaria','2do Secundaria','3ro Secundaria','4to Secundaria','5to Secundaria','6to Secundaria'];
 
-function showToast(msg, duration=2800) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), duration);
+function showToast(msg, d=2800) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), d);
 }
-
 function setAlert(id, msg, type='error') {
-  const el = $(id);
-  if (!el) return;
-  if (!msg) { el.innerHTML = ''; return; }
-  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  const el = $(id); if (!el) return;
+  el.innerHTML = msg ? `<div class="alert alert-${type}">${msg}</div>` : '';
 }
-
 function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
   return a;
 }
-
 function formatDate(ts) {
-  if (!ts) return '';
-  return new Date(ts).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
+  if(!ts) return '';
+  return new Date(ts).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});
 }
-
-function formatTime(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+function formatTime(s) {
+  const m=Math.floor(s/60), sec=s%60;
+  return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
 }
-
 function initials(name='') {
-  return name.trim().split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?';
+  return name.trim().split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
+}
+function safeKey(s='') { return s.replace(/[.#$\[\]/]/g,'_').toLowerCase(); }
+function deepCopy(o) { return JSON.parse(JSON.stringify(o)); }
+
+// ── Splash ────────────────────────────────────────
+function runSplash(cb) {
+  const bar = $('splash-bar');
+  let pct = 0;
+  const iv = setInterval(() => {
+    pct += Math.random() * 18 + 5;
+    if (pct >= 100) { pct = 100; clearInterval(iv); }
+    bar.style.width = pct + '%';
+    if (pct >= 100) setTimeout(() => { $('splash').classList.add('fade'); setTimeout(cb, 650); }, 200);
+  }, 120);
 }
 
-function safeKey(str='') {
-  return str.replace(/[.#$\[\]/]/g,'_').toLowerCase();
+// ── Countdown ─────────────────────────────────────
+function runCountdown(cb) {
+  const overlay = $('countdown-overlay');
+  const numEl = $('countdown-num');
+  overlay.classList.remove('hidden');
+  let n = 3;
+  numEl.textContent = n;
+  const iv = setInterval(() => {
+    n--;
+    if (n <= 0) {
+      clearInterval(iv);
+      numEl.textContent = 'Ya!';
+      setTimeout(() => { overlay.classList.add('hidden'); cb(); }, 700);
+    } else {
+      numEl.textContent = n;
+      numEl.style.animation = 'none';
+      void numEl.offsetWidth;
+      numEl.style.animation = 'countPop .8s ease-in-out';
+    }
+  }, 1000);
 }
 
-function deepCopy(obj) { return JSON.parse(JSON.stringify(obj)); }
-
-// ══════════════════════════════════════════════════
-// TXT PARSER
-// ══════════════════════════════════════════════════
+// ── Parser ────────────────────────────────────────
 const Parser = {
   parse(text) {
     const questions = [];
-    // Split by question number pattern
     const blocks = text.trim().split(/\n(?=\d+\.)/);
-
     for (const block of blocks) {
-      const lines = block.trim().split('\n').filter(l => l.trim());
+      const lines = block.trim().split('\n').filter(l=>l.trim());
       if (!lines.length) continue;
-
-      // First line = question text
-      const qLine = lines[0].replace(/^\d+\.\s*/, '').trim();
+      const qLine = lines[0].replace(/^\d+\.\s*/,'').trim();
       if (!qLine) continue;
-
-      const options = [];
-      let correctIndex = -1;
-
-      for (let i = 1; i < lines.length; i++) {
+      const options = []; let correctIndex = -1;
+      for (let i=1; i<lines.length; i++) {
         const line = lines[i].trim();
         const match = line.match(/^([A-D])\.\s*(.*)/);
         if (!match) continue;
-
-        let optText = match[2].trim();
-        let isCorrect = false;
-
-        // Check for R marker (end of line, possibly with spaces)
-        if (/\s+R\s*$/.test(optText)) {
-          isCorrect = true;
-          optText = optText.replace(/\s+R\s*$/, '').trim();
-        } else if (/\bR$/.test(optText)) {
-          isCorrect = true;
-          optText = optText.replace(/\bR$/, '').trim();
+        let optText = match[2].trim(); let isCorrect = false;
+        if (/\s+R\s*$/.test(optText)||/\bR$/.test(optText)) {
+          isCorrect = true; optText = optText.replace(/\s*\bR\s*$/,'').trim();
         }
-
-        options.push({ letter: match[1], text: optText, isCorrect });
-        if (isCorrect) correctIndex = options.length - 1;
+        options.push({letter:match[1], text:optText, isCorrect});
+        if (isCorrect) correctIndex = options.length-1;
       }
-
-      if (options.length >= 2 && correctIndex >= 0) {
-        questions.push({
-          id: `q_${Date.now()}_${Math.random().toString(36).substr(2,6)}`,
-          text: qLine,
-          options,
-          correctIndex
-        });
+      if (options.length>=2 && correctIndex>=0) {
+        questions.push({id:`q_${Date.now()}_${Math.random().toString(36).substr(2,5)}`, text:qLine, options, correctIndex});
       }
     }
     return questions;
   }
 };
 
-// ══════════════════════════════════════════════════
-// APP CORE
-// ══════════════════════════════════════════════════
+// ── APP ───────────────────────────────────────────
 const App = {
-  currentStudent: null,   // { uid, user, name, level }
+  currentStudent: null,
   isAdmin: false,
   ADMIN_PASS: 'admin123',
+  examState: {},
 
   init() {
-    // Check session
-    const saved = localStorage.getItem('musitest_student');
-    if (saved) {
-      try {
-        this.currentStudent = JSON.parse(saved);
-        this.enterStudent();
-      } catch(e) { localStorage.removeItem('musitest_student'); }
-    }
-
-    // Keyboard enter
+    runSplash(() => {
+      const saved = localStorage.getItem('musitest_student');
+      if (saved) { try { this.currentStudent = JSON.parse(saved); this.enterStudent(); } catch(e) { localStorage.removeItem('musitest_student'); } }
+    });
     $('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') this.login(); });
     $('reg-pass').addEventListener('keydown', e => { if(e.key==='Enter') this.register(); });
   },
 
-  showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    $(id)?.classList.add('active');
-  },
+  showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id)?.classList.add('active'); },
 
   showTab(tab) {
-    $('tab-login').classList.toggle('hidden', tab !== 'login');
-    $('tab-register').classList.toggle('hidden', tab !== 'register');
-    document.querySelectorAll('.tab-btn').forEach((btn,i) => {
-      btn.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='register'));
-    });
+    $('tab-login').classList.toggle('hidden', tab!=='login');
+    $('tab-register').classList.toggle('hidden', tab!=='register');
+    document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
   },
 
   async login() {
     const user = $('login-user').value.trim().toLowerCase();
     const pass = $('login-pass').value.trim();
-    if (!user || !pass) return setAlert('login-alert', '⚠️ Completa todos los campos.', 'warn');
-    setAlert('login-alert', '');
-
+    if (!user||!pass) return setAlert('login-alert','Completa todos los campos.','warn');
+    setAlert('login-alert','');
     try {
       const snap = await db.ref(`students/${safeKey(user)}`).get();
-      if (!snap.exists()) return setAlert('login-alert', '❌ Usuario no encontrado.');
+      if (!snap.exists()) return setAlert('login-alert','Usuario no encontrado.');
       const data = snap.val();
-      if (data.password !== pass) return setAlert('login-alert', '❌ Contraseña incorrecta.');
-
-      this.currentStudent = { uid: safeKey(user), user, name: data.name, level: data.level };
+      if (data.password !== pass) return setAlert('login-alert','Contrasena incorrecta.');
+      this.currentStudent = {uid:safeKey(user), user, name:data.name, level:data.level};
       localStorage.setItem('musitest_student', JSON.stringify(this.currentStudent));
-
-      // Update presence
       db.ref(`students/${safeKey(user)}/online`).set(true);
       db.ref(`students/${safeKey(user)}/online`).onDisconnect().set(false);
-
       this.enterStudent();
-    } catch(e) {
-      setAlert('login-alert', '⚠️ Error de conexión. Verifica Firebase.');
-      console.error(e);
-    }
+    } catch(e) { setAlert('login-alert','Error de conexion. Verifica Firebase.'); console.error(e); }
   },
 
   async register() {
-    const name = $('reg-name').value.trim();
-    const user = $('reg-user').value.trim().toLowerCase();
-    const pass = $('reg-pass').value.trim();
-    const level = $('reg-level').value;
-    if (!name||!user||!pass||!level) return setAlert('register-alert','⚠️ Completa todos los campos.','warn');
-    if (pass.length < 6) return setAlert('register-alert','⚠️ La contraseña debe tener al menos 6 caracteres.','warn');
-    if (!/^[a-z0-9_]+$/.test(user)) return setAlert('register-alert','⚠️ Usuario solo puede tener letras, números y _','warn');
-
-    const key = safeKey(user);
-    const snap = await db.ref(`students/${key}`).get();
-    if (snap.exists()) return setAlert('register-alert','❌ Ese usuario ya existe.','error');
-
-    await db.ref(`students/${key}`).set({
-      user, password: pass, name, level,
-      online: false, createdAt: Date.now(), history: {}
-    });
-
-    showToast('✅ Cuenta creada. Inicia sesión.');
-    this.showTab('login');
-    $('login-user').value = user;
+    const name=$('reg-name').value.trim(), user=$('reg-user').value.trim().toLowerCase();
+    const pass=$('reg-pass').value.trim(), level=$('reg-level').value;
+    if (!name||!user||!pass||!level) return setAlert('register-alert','Completa todos los campos.','warn');
+    if (pass.length<6) return setAlert('register-alert','La contrasena debe tener al menos 6 caracteres.','warn');
+    if (!/^[a-z0-9_]+$/.test(user)) return setAlert('register-alert','Usuario solo puede tener letras, numeros y _','warn');
+    const key=safeKey(user);
+    const snap=await db.ref(`students/${key}`).get();
+    if (snap.exists()) return setAlert('register-alert','Ese usuario ya existe.','error');
+    await db.ref(`students/${key}`).set({user, password:pass, name, level, online:false, createdAt:Date.now(), history:{}});
+    showToast('Cuenta creada. Inicia sesion.');
+    this.showTab('login'); $('login-user').value=user;
   },
 
   enterStudent() {
     const s = this.currentStudent;
     $('stu-avatar').textContent = initials(s.name);
-    $('stu-nav-name').textContent = s.name;
-
     this.showScreen('screen-student');
     this.renderStudentHome();
     this.listenExamState();
   },
 
   listenExamState() {
-    const s = this.currentStudent;
     db.ref('exam/state').on('value', snap => {
-      const state = snap.val() || {};
+      const state = snap.val()||{};
       this.examState = state;
       this.handleExamState(state);
     });
   },
 
   handleExamState(state) {
-    const homeArea = $('exam-waiting-area');
-    const homeContent = $('stu-home-content');
+    const homeArea=$('exam-waiting-area'), homeContent=$('stu-home-content');
+    if (!homeArea) return;
+    // Check if this exam targets the student's level
+    const myLevel = this.currentStudent.level;
+    const targeted = !state.targetLevel || state.targetLevel === 'todos' || state.targetLevel === myLevel;
 
-    if (state.status === 'active') {
-      // Check if student already submitted
-      const uid = this.currentStudent.uid;
-      db.ref(`exam/submissions/${uid}`).get().then(snap => {
-        if (snap.exists() && snap.val().submitted) {
-          // Already submitted – show waiting
-          homeArea.innerHTML = this.renderWaiting('✅', 'Evaluación enviada', 'Espera que el administrador muestre los resultados.');
-          homeContent.innerHTML = '';
+    if (state.status==='active' && targeted) {
+      db.ref(`exam/submissions/${this.currentStudent.uid}`).get().then(snap => {
+        if (snap.exists()&&snap.val().submitted) {
+          homeArea.innerHTML = this.renderWaiting('Listo','Evaluacion enviada','Espera que el administrador muestre los resultados.');
+          if(homeContent) homeContent.innerHTML='';
         } else {
-          // Enter exam mode
           this.startExam(state);
         }
       });
-    } else if (state.status === 'results') {
-      homeArea.innerHTML = '';
+    } else if (state.status==='results' && targeted) {
+      homeArea.innerHTML='';
       this.showStudentResults();
     } else {
-      homeArea.innerHTML = '';
+      homeArea.innerHTML='';
       this.renderStudentHome();
     }
   },
@@ -1645,1315 +672,1034 @@ const App = {
   renderStudentHome() {
     const s = this.currentStudent;
     const homeContent = $('stu-home-content');
-
-    db.ref(`exam/state`).get().then(snap => {
-      const state = snap.val() || {};
-      let examBanner = '';
-
-      if (state.status === 'idle' || !state.status) {
-        examBanner = `<div class="card" style="border-color:var(--border2);text-align:center;padding:32px">
-          <div style="font-size:40px;margin-bottom:12px">🎼</div>
-          <div style="font-family:var(--font);font-size:18px;font-weight:700;margin-bottom:8px">Sin evaluación activa</div>
-          <div style="color:var(--text3);font-size:14px">El administrador iniciará la próxima evaluación.<br>¡Espera aquí!</div>
-          <div class="pulse-dots" style="margin-top:20px;justify-content:center"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-        </div>`;
+    if (!homeContent) return;
+    db.ref(`students/${s.uid}/history`).limitToLast(3).get().then(hSnap => {
+      const history = hSnap.val()||{};
+      const items = Object.values(history).sort((a,b)=>b.date-a.date);
+      let recentHTML='';
+      if (items.length) {
+        recentHTML=`<div class="section-header"><div class="section-title">Recientes</div></div>`;
+        items.forEach(item => { recentHTML+=this.renderHistoryItem(item); });
       }
-
-      // Load recent history
-      db.ref(`students/${s.uid}/history`).limitToLast(3).get().then(hSnap => {
-        const history = hSnap.val() || {};
-        const items = Object.values(history).sort((a,b) => b.date - a.date);
-
-        let recentHTML = '';
-        if (items.length) {
-          recentHTML = `<div class="section-header"><div class="section-title">Recientes</div></div>`;
-          items.forEach(item => {
-            recentHTML += this.renderHistoryItem(item);
-          });
-        }
-
-        homeContent.innerHTML = `
-          <div style="padding:8px 0 16px">
-            <div style="font-family:var(--font);font-size:22px;font-weight:800">Hola, ${s.name.split(' ')[0]} 👋</div>
-            <div style="color:var(--text3);font-size:13px;margin-top:4px">${s.level}</div>
-          </div>
-          ${examBanner}
-          ${recentHTML}
-        `;
-      });
+      homeContent.innerHTML=`
+        <div style="padding:6px 0 14px">
+          <div style="font-family:var(--font);font-size:20px;font-weight:800">Hola, ${s.name.split(' ')[0]}!</div>
+          <div style="color:var(--text3);font-size:12px;margin-top:3px">${s.level}</div>
+        </div>
+        <div class="card" style="text-align:center;padding:28px">
+          <div style="font-size:36px;margin-bottom:10px">&#9836;</div>
+          <div style="font-family:var(--font);font-size:16px;font-weight:700;margin-bottom:7px">Sin evaluacion activa</div>
+          <div style="color:var(--text3);font-size:13px">El administrador iniciara la proxima evaluacion.</div>
+          <div class="pulse-dots" style="margin-top:18px;justify-content:center"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        </div>
+        ${recentHTML}`;
     });
   },
 
   renderHistoryItem(item) {
-    const pct = Math.round((item.score / item.total) * 100);
+    const pct = Math.round((item.score/item.total)*100);
     return `<div class="history-item">
       <div class="history-score-badge">${pct}%</div>
       <div class="history-info">
-        <div class="history-title">${item.testName || 'Evaluación'}</div>
-        <div class="history-meta">${formatDate(item.date)} · ${item.score}/${item.total} correctas</div>
+        <div class="history-title">${item.testName||'Evaluacion'}</div>
+        <div class="history-meta">${formatDate(item.date)} - ${item.score}/${item.total} correctas</div>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="App.downloadPDF('${item.id}')">📄</button>
+      <button class="btn btn-ghost btn-sm" onclick="App.downloadPDF('${item.id}')">PDF</button>
     </div>`;
   },
 
   stuTab(tab, btn) {
-    // Check if exam is active — lock navigation
-    if (this.examState && this.examState.status === 'active') {
-      showToast('⚠️ Evaluación en curso. No puedes navegar.');
-      return;
-    }
-
-    ['home','history','profile'].forEach(t => {
-      $(`stu-tab-${t}`).classList.toggle('hidden', t !== tab);
-    });
-    document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+    if (this.examState&&this.examState.status==='active') { showToast('Evaluacion en curso. No puedes navegar.'); return; }
+    ['home','history','profile'].forEach(t=>{$(`stu-tab-${t}`).classList.toggle('hidden',t!==tab);});
+    document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-
-    if (tab === 'history') this.renderHistory();
-    if (tab === 'profile') this.renderProfile();
+    if (tab==='history') this.renderHistory();
+    if (tab==='profile') this.renderProfile();
   },
 
   renderHistory() {
-    const s = this.currentStudent;
-    db.ref(`students/${s.uid}/history`).get().then(snap => {
-      const history = snap.val() || {};
-      const items = Object.values(history).sort((a,b) => b.date - a.date);
-      const el = $('history-list');
-
-      if (!items.length) {
-        el.innerHTML = `<div class="empty-state">
-          <div class="empty-icon">📋</div>
-          <h3>Sin historial</h3>
-          <p>Aquí aparecerán tus evaluaciones completadas.</p>
-        </div>`;
-        return;
-      }
-
-      el.innerHTML = items.map(item => this.renderHistoryItem(item)).join('');
+    const s=this.currentStudent;
+    db.ref(`students/${s.uid}/history`).get().then(snap=>{
+      const history=snap.val()||{};
+      const items=Object.values(history).sort((a,b)=>b.date-a.date);
+      const el=$('history-list');
+      if (!items.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">&#128203;</div><h3>Sin historial</h3><p>Aqui apareceran tus evaluaciones completadas.</p></div>`; return; }
+      el.innerHTML=items.map(item=>this.renderHistoryItem(item)).join('');
     });
   },
 
   renderProfile() {
-    const s = this.currentStudent;
-    db.ref(`students/${s.uid}/history`).get().then(snap => {
-      const history = snap.val() || {};
-      const items = Object.values(history);
-      const total = items.length;
-      const avgPct = total ? Math.round(items.reduce((sum,i) => sum + (i.score/i.total)*100, 0) / total) : 0;
-      const bestPct = total ? Math.max(...items.map(i => Math.round((i.score/i.total)*100))) : 0;
-
-      $('profile-content').innerHTML = `
+    const s=this.currentStudent;
+    db.ref(`students/${s.uid}/history`).get().then(snap=>{
+      const history=snap.val()||{};
+      const items=Object.values(history);
+      const total=items.length;
+      const avgPct=total?Math.round(items.reduce((sum,i)=>sum+(i.score/i.total)*100,0)/total):0;
+      const bestPct=total?Math.max(...items.map(i=>Math.round((i.score/i.total)*100))):0;
+      $('profile-content').innerHTML=`
         <div class="profile-header">
           <div class="profile-avatar-lg">${initials(s.name)}</div>
-          <div class="profile-name">${s.name}</div>
-          <div class="profile-level">${s.level}</div>
+          <div style="font-family:var(--font);font-size:20px;font-weight:800">${s.name}</div>
+          <div style="color:var(--text3);font-size:12px;margin-top:3px">${s.level}</div>
         </div>
-        <div class="stats-grid" style="margin:16px 0">
+        <div class="stats-grid" style="margin:14px 0">
           <div class="stat-card primary"><div class="stat-value">${total}</div><div class="stat-label">Evaluaciones</div></div>
           <div class="stat-card accent"><div class="stat-value">${avgPct}%</div><div class="stat-label">Promedio</div></div>
           <div class="stat-card gold"><div class="stat-value">${bestPct}%</div><div class="stat-label">Mejor nota</div></div>
           <div class="stat-card sky"><div class="stat-value">${s.level.split(' ')[0]}</div><div class="stat-label">Nivel</div></div>
         </div>
         <div class="card">
-          <div class="card-title">Información</div>
-          <div style="color:var(--text2);font-size:14px;line-height:2">
-            <div>👤 <strong style="color:var(--text)">${s.name}</strong></div>
-            <div>🔑 Usuario: <strong style="color:var(--text)">${s.user}</strong></div>
-            <div>🎓 ${s.level}</div>
+          <div class="card-title">Informacion</div>
+          <div style="color:var(--text2);font-size:13px;line-height:2.2">
+            <div>Nombre: <strong style="color:var(--text)">${s.name}</strong></div>
+            <div>Usuario: <strong style="color:var(--text)">${s.user}</strong></div>
+            <div>Nivel: <strong style="color:var(--text)">${s.level}</strong></div>
           </div>
-        </div>
-      `;
+        </div>`;
     });
   },
 
   async startExam(state) {
-    // Load test questions
     const snap = await db.ref(`tests/${state.testId}`).get();
     if (!snap.exists()) return;
     const test = snap.val();
-
-    // Shuffle questions and options
     let questions = shuffle([...test.questions]);
     questions = questions.map(q => {
       const shuffledOpts = shuffle([...q.options]);
-      const newCorrectIndex = shuffledOpts.findIndex(o => o.isCorrect);
-      return { ...q, options: shuffledOpts, correctIndex: newCorrectIndex };
+      const newCorrectIndex = shuffledOpts.findIndex(o=>o.isCorrect);
+      return {...q, options:shuffledOpts, correctIndex:newCorrectIndex};
     });
-
-    Exam.start({
-      questions,
-      testId: state.testId,
-      testName: test.name,
-      timerSeconds: state.timerSeconds || 0,
-      studentUid: this.currentStudent.uid,
-      startedAt: state.startedAt || Date.now()
+    runCountdown(() => {
+      Exam.start({questions, testId:state.testId, testName:test.name, timerSeconds:state.timerSeconds||0, studentUid:this.currentStudent.uid, startedAt:state.startedAt||Date.now()});
     });
   },
 
   showStudentResults() {
-    const uid = this.currentStudent.uid;
-    db.ref(`exam/submissions/${uid}`).get().then(snap => {
-      if (!snap.exists()) {
-        $('exam-waiting-area').innerHTML = this.renderWaiting('⏳','Resultados próximos','El administrador publicará los resultados en breve.');
-        return;
-      }
-      const sub = snap.val();
+    const uid=this.currentStudent.uid;
+    db.ref(`exam/submissions/${uid}`).get().then(snap=>{
+      if (!snap.exists()) { $('exam-waiting-area').innerHTML=this.renderWaiting('...','Resultados proximos','El administrador publicara los resultados en breve.'); return; }
       this.showScreen('screen-results');
-      this.renderResultsScreen(sub);
+      this.renderResultsScreen(snap.val());
     });
   },
 
   renderResultsScreen(sub) {
-    const pct = Math.round((sub.score / sub.total) * 100);
-    const circumference = 2 * Math.PI * 54;
-    const offset = circumference - (pct / 100) * circumference;
-
-    let color = 'var(--success)';
-    let emoji = '🎉';
-    let msg = '¡Excelente trabajo!';
-    if (pct < 60) { color = 'var(--error)'; emoji = '💪'; msg = '¡Sigue practicando!'; }
-    else if (pct < 80) { color = 'var(--gold)'; emoji = '👍'; msg = '¡Buen trabajo!'; }
-
-    $('results-content').innerHTML = `
-      <div style="text-align:center;padding:20px 0 10px">
-        <div style="font-size:40px;margin-bottom:8px">${emoji}</div>
-        <div style="font-family:var(--font);font-size:22px;font-weight:800;margin-bottom:4px">${msg}</div>
-        <div style="color:var(--text3);font-size:14px">${sub.testName || 'Evaluación'}</div>
+    const pct=Math.round((sub.score/sub.total)*100);
+    const circ=2*Math.PI*54;
+    const offset=circ-(pct/100)*circ;
+    let color='var(--ok)', emoji='Excelente!', msg='Gran trabajo!';
+    if (pct<60){color='var(--err)';emoji='Sigue adelante!';msg='Practica mas para mejorar.';}
+    else if (pct<80){color='var(--gold)';emoji='Buen trabajo!';msg='Vas por buen camino.';}
+    const detailHTML = (sub.answers&&sub.questions) ? sub.questions.map((q,i)=>{
+      const ans=sub.answers[i]; const isCorrect=ans===q.correctIndex;
+      return `<div class="preview-q">
+        <div class="preview-q-text" style="color:${isCorrect?'var(--ok)':'var(--err)'}">${isCorrect?'[OK]':'[X]'} ${q.text}</div>
+        <div class="preview-option correct">Respuesta correcta: ${q.options[q.correctIndex].text}</div>
+        ${!isCorrect&&ans>=0?`<div class="preview-option" style="color:var(--err)">Tu respuesta: ${q.options[ans]?.text||'No respondida'}</div>`:''}
+      </div>`;
+    }).join('') : '';
+    $('results-content').innerHTML=`
+      <div style="text-align:center;padding:18px 0 8px">
+        <div style="font-family:var(--font);font-size:18px;font-weight:800;margin-bottom:3px">${emoji}</div>
+        <div style="color:var(--text3);font-size:13px">${sub.testName||'Evaluacion'}</div>
       </div>
       <div class="result-score-ring">
         <svg viewBox="0 0 120 120" width="140" height="140">
           <circle class="score-circle-bg" cx="60" cy="60" r="54"/>
-          <circle class="score-circle" cx="60" cy="60" r="54"
-            stroke="${color}"
-            stroke-dasharray="${circumference}"
-            stroke-dashoffset="${offset}"
-            style="transition:stroke-dashoffset 1.5s ease"/>
+          <circle class="score-circle" cx="60" cy="60" r="54" stroke="${color}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
         </svg>
         <div class="score-num">${pct}%<span>${sub.score}/${sub.total}</span></div>
       </div>
-
-      <div class="stats-grid" style="margin:16px 0">
+      <div style="text-align:center;color:var(--text2);margin-bottom:16px">${msg}</div>
+      <div class="stats-grid">
         <div class="stat-card primary"><div class="stat-value">${sub.score}</div><div class="stat-label">Correctas</div></div>
-        <div class="stat-card" style=""><div class="stat-value" style="color:var(--error)">${sub.total - sub.score}</div><div class="stat-label">Incorrectas</div></div>
+        <div class="stat-card" style=""><div class="stat-value" style="color:var(--err)">${sub.total-sub.score}</div><div class="stat-label">Incorrectas</div></div>
         <div class="stat-card accent"><div class="stat-value">${pct}%</div><div class="stat-label">Porcentaje</div></div>
         <div class="stat-card gold"><div class="stat-value">${formatTime(sub.timeUsed||0)}</div><div class="stat-label">Tiempo</div></div>
       </div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn btn-primary flex-1" onclick="App.downloadPDF('${sub.id}')">📄 Descargar PDF</button>
-        <button class="btn btn-ghost flex-1" onclick="App.goHome()">← Inicio</button>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="btn btn-primary flex-1" onclick="App.downloadPDFResult(null)">Descargar PDF</button>
+        <button class="btn btn-ghost flex-1" onclick="App.goHome()">Inicio</button>
       </div>
-
-      <div class="card" style="margin-top:16px">
-        <div class="card-title">Detalle por pregunta</div>
-        <div id="results-detail"></div>
-      </div>
-    `;
-
-    // Render question review
-    if (sub.answers && sub.questions) {
-      const detail = $('results-detail');
-      detail.innerHTML = sub.questions.map((q,i) => {
-        const ans = sub.answers[i];
-        const isCorrect = ans === q.correctIndex;
-        return `<div class="preview-q">
-          <div class="preview-q-text" style="color:${isCorrect?'var(--success)':'var(--error)'}">${isCorrect?'✓':'✗'} ${q.text}</div>
-          <div class="preview-option correct">✅ ${q.options[q.correctIndex].text}</div>
-          ${!isCorrect && ans >= 0 ? `<div class="preview-option" style="color:var(--error)">Tu respuesta: ${q.options[ans]?.text || 'No respondida'}</div>` : ''}
-        </div>`;
-      }).join('');
-    }
+      <div class="card"><div class="card-title">Detalle de respuestas</div>${detailHTML}</div>`;
   },
 
   async downloadPDF(resultId) {
-    const s = this.currentStudent;
-    // Try to find in history
+    const s=this.currentStudent;
     let sub;
-    if (resultId) {
-      const snap = await db.ref(`students/${s.uid}/history/${resultId}`).get();
-      if (snap.exists()) sub = snap.val();
+    if (resultId) { const snap=await db.ref(`students/${s.uid}/history/${resultId}`).get(); if(snap.exists()) sub=snap.val(); }
+    if (!sub) { const snap2=await db.ref(`exam/submissions/${s.uid}`).get(); if(snap2.exists()) sub=snap2.val(); }
+    if (!sub) return showToast('No se encontro el resultado.');
+    // Need questions for detail
+    if (!sub.questions) {
+      const hSnap = await db.ref(`students/${s.uid}/history/${resultId}`).get();
+      if (hSnap.exists()) sub = {...sub, ...hSnap.val()};
     }
-    if (!sub) {
-      // Try current exam submission
-      const snap2 = await db.ref(`exam/submissions/${s.uid}`).get();
-      if (snap2.exists()) sub = snap2.val();
-    }
-    if (!sub) return showToast('No se encontró el resultado.');
-
     this.generatePDF(s, sub);
   },
 
-  generatePDF(student, result) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+  async downloadPDFResult(resultId) {
+    const s=this.currentStudent;
+    const snap=await db.ref(`exam/submissions/${s.uid}`).get();
+    if (!snap.exists()) return showToast('No se encontro el resultado.');
+    this.generatePDF(s, snap.val());
+  },
 
-    const pct = Math.round((result.score / result.total) * 100);
+  generatePDF(student, result) {
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF();
+    const pct=Math.round((result.score/result.total)*100);
+    const grade=pct>=90?'Excelente':pct>=80?'Muy Bueno':pct>=70?'Bueno':pct>=60?'Regular':'Insuficiente';
 
     // Header
-    doc.setFillColor(15, 18, 32);
-    doc.rect(0, 0, 210, 40, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(22);
-    doc.text('🎼 MusiTest', 20, 22);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Reporte de Evaluación', 20, 32);
-
-    // Student info
-    doc.setTextColor(30, 30, 30);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Información del Estudiante', 20, 55);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Nombre: ${student.name}`, 20, 65);
-    doc.text(`Usuario: ${student.user}`, 20, 73);
-    doc.text(`Nivel: ${student.level}`, 20, 81);
-    doc.text(`Fecha: ${formatDate(result.date || Date.now())}`, 20, 89);
-    doc.text(`Evaluación: ${result.testName || 'Evaluación'}`, 20, 97);
+    doc.setFillColor(10,12,20);
+    doc.rect(0,0,210,36,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(20);
+    doc.text('MusiTest',20,18);
+    doc.setFontSize(10);
+    doc.setFont('helvetica','normal');
+    doc.text('Reporte de Evaluacion',20,28);
 
     // Score box
-    doc.setFillColor(108, 99, 255);
-    doc.roundedRect(130, 50, 60, 50, 4, 4, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(32);
-    doc.text(`${pct}%`, 150, 78, { align: 'center' });
-    doc.setFontSize(11);
-    doc.text(`${result.score}/${result.total}`, 150, 90, { align: 'center' });
-    doc.setFontSize(9);
-    doc.text('correctas', 150, 97, { align: 'center' });
+    doc.setFillColor(108,99,255);
+    doc.roundedRect(148,6,54,24,4,4,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(22);
+    doc.text(pct+'%',175,22,{align:'center'});
 
-    // Stats
-    doc.setTextColor(30, 30, 30);
+    // Student info
+    doc.setTextColor(30,30,30);
     doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Resultados', 20, 115);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Respuestas correctas: ${result.score}`, 20, 125);
-    doc.text(`Respuestas incorrectas: ${result.total - result.score}`, 20, 133);
-    doc.text(`Porcentaje: ${pct}%`, 20, 141);
-    if (result.timeUsed) doc.text(`Tiempo utilizado: ${formatTime(result.timeUsed)}`, 20, 149);
+    doc.setFont('helvetica','bold');
+    doc.text('Datos del Estudiante',20,48);
+    doc.setFontSize(10);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(60,60,60);
+    const infoLines=[
+      `Nombre: ${student.name}`,
+      `Usuario: ${student.user}`,
+      `Nivel: ${student.level}`,
+      `Fecha: ${formatDate(result.date||Date.now())}`,
+      `Evaluacion: ${result.testName||'Evaluacion'}`
+    ];
+    infoLines.forEach((l,i)=>doc.text(l,20,58+i*8));
 
-    // Grade
-    let grade = pct >= 90 ? 'Excelente' : pct >= 80 ? 'Muy Bueno' : pct >= 70 ? 'Bueno' : pct >= 60 ? 'Regular' : 'Insuficiente';
-    doc.setFont('helvetica', 'bold');
+    // Summary
     doc.setFontSize(13);
-    doc.text(`Calificación: ${grade}`, 20, 162);
+    doc.setFont('helvetica','bold');
+    doc.setTextColor(30,30,30);
+    doc.text('Resumen',20,108);
+    doc.setFontSize(10);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(60,60,60);
+    doc.text(`Respuestas correctas: ${result.score} de ${result.total}`,20,118);
+    doc.text(`Respuestas incorrectas: ${result.total-result.score}`,20,126);
+    doc.text(`Porcentaje obtenido: ${pct}%`,20,134);
+    if(result.timeUsed) doc.text(`Tiempo utilizado: ${formatTime(result.timeUsed)}`,20,142);
+    doc.setFont('helvetica','bold');
+    doc.text(`Calificacion: ${grade}`,20,152);
 
-    // Footer
-    doc.setFontSize(9);
-    doc.setTextColor(150, 150, 150);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Kabert Pro - LMKE | MusiTest Platform', 105, 285, { align: 'center' });
+    // Questions detail
+    if (result.questions&&result.answers) {
+      doc.addPage();
+      doc.setFillColor(10,12,20);
+      doc.rect(0,0,210,18,'F');
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(12);
+      doc.text('Detalle de Preguntas - '+student.name,20,12);
+
+      let y=28;
+      result.questions.forEach((q,i)=>{
+        const ans=result.answers[i];
+        const isCorrect=ans===q.correctIndex;
+        if(y>260){doc.addPage();y=20;}
+        // Question
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(9);
+        doc.setTextColor(30,30,30);
+        const qLines=doc.splitTextToSize(`${i+1}. ${q.text}`,170);
+        doc.text(qLines,20,y);
+        y+=qLines.length*5+2;
+        // Options
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(8);
+        q.options.forEach((opt,oi)=>{
+          if(y>270){doc.addPage();y=20;}
+          const isAns=oi===ans, isCorr=oi===q.correctIndex;
+          if(isCorr) doc.setTextColor(6,150,100);
+          else if(isAns&&!isCorr) doc.setTextColor(200,50,70);
+          else doc.setTextColor(100,100,100);
+          const prefix=isCorr?'[OK] ':isAns&&!isCorr?'[X]  ':'     ';
+          doc.text(prefix+opt.letter+'. '+opt.text,25,y);
+          y+=5;
+        });
+        doc.setTextColor(180,180,180);
+        doc.line(20,y+1,190,y+1);
+        y+=5;
+      });
+    }
+
+    // Footer on all pages
+    const pageCount=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pageCount;i++){
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150,150,150);
+      doc.setFont('helvetica','normal');
+      doc.text('Kabert Pro - LMKE | MusiTest Platform',105,289,{align:'center'});
+      doc.text(`Pagina ${i} de ${pageCount}`,190,289,{align:'right'});
+    }
 
     doc.save(`MusiTest_${student.user}_${Date.now()}.pdf`);
-    showToast('📄 PDF descargado.');
+    showToast('PDF descargado.');
   },
 
-  goHome() {
-    this.showScreen('screen-student');
-    this.renderStudentHome();
-  },
-
+  goHome() { this.showScreen('screen-student'); this.renderStudentHome(); },
   logout() {
-    if (this.currentStudent) {
-      db.ref(`students/${this.currentStudent.uid}/online`).set(false);
-    }
-    this.currentStudent = null;
-    localStorage.removeItem('musitest_student');
-    this.showScreen('screen-landing');
-    this.showTab('login');
+    if(this.currentStudent) db.ref(`students/${this.currentStudent.uid}/online`).set(false);
+    this.currentStudent=null; localStorage.removeItem('musitest_student');
+    this.showScreen('screen-landing'); this.showTab('login');
   },
-
-  showAdminLogin() {
-    this.showScreen('screen-admin-login');
-    $('admin-pass-input').value = '';
-    setAlert('admin-login-alert', '');
-    setTimeout(() => $('admin-pass-input').focus(), 100);
-  },
-
+  showAdminLogin() { this.showScreen('screen-admin-login'); $('admin-pass-input').value=''; setAlert('admin-login-alert',''); setTimeout(()=>$('admin-pass-input').focus(),100); },
   adminLogin() {
-    const pass = $('admin-pass-input').value;
-    if (pass === this.ADMIN_PASS) {
-      this.isAdmin = true;
-      this.showScreen('screen-admin');
-      Admin.init();
-    } else {
-      setAlert('admin-login-alert', '❌ Contraseña incorrecta.', 'error');
-    }
+    if($('admin-pass-input').value===this.ADMIN_PASS){this.isAdmin=true;this.showScreen('screen-admin');Admin.init();}
+    else setAlert('admin-login-alert','Contrasena incorrecta.','error');
   },
-
-  adminLogout() {
-    this.isAdmin = false;
-    this.showScreen('screen-landing');
-  }
+  adminLogout() { this.isAdmin=false; this.showScreen('screen-landing'); }
 };
 
-// ══════════════════════════════════════════════════
-// EXAM ENGINE
-// ══════════════════════════════════════════════════
+// ── EXAM ENGINE ───────────────────────────────────
 const Exam = {
-  config: null,
-  currentQ: 0,
-  answers: [],
-  timerInterval: null,
-  secondsLeft: 0,
-  startTime: 0,
-
+  config:null, currentQ:0, answers:[], timerInterval:null, secondsLeft:0, startTime:0,
   start(config) {
-    this.config = config;
-    this.currentQ = 0;
-    this.answers = new Array(config.questions.length).fill(-1);
-    this.startTime = Date.now();
-
-    // Restore from Firebase if exists
-    db.ref(`exam/submissions/${config.studentUid}`).get().then(snap => {
-      if (snap.exists() && !snap.val().submitted) {
-        const saved = snap.val();
-        if (saved.answers) this.answers = saved.answers;
-        if (saved.currentQ != null) this.currentQ = saved.currentQ;
-      }
-
-      // Timer
-      if (config.timerSeconds > 0) {
-        const elapsed = Math.floor((Date.now() - config.startedAt) / 1000);
-        this.secondsLeft = Math.max(0, config.timerSeconds - elapsed);
-      } else {
-        this.secondsLeft = 0;
-      }
-
+    this.config=config; this.currentQ=0; this.answers=new Array(config.questions.length).fill(-1); this.startTime=Date.now();
+    db.ref(`exam/submissions/${config.studentUid}`).get().then(snap=>{
+      if(snap.exists()&&!snap.val().submitted){const saved=snap.val();if(saved.answers)this.answers=saved.answers;if(saved.currentQ!=null)this.currentQ=saved.currentQ;}
+      if(config.timerSeconds>0){const elapsed=Math.floor((Date.now()-config.startedAt)/1000);this.secondsLeft=Math.max(0,config.timerSeconds-elapsed);}
+      else this.secondsLeft=0;
       App.showScreen('screen-exam');
       this.render();
       this.startTimer();
     });
   },
-
   startTimer() {
     clearInterval(this.timerInterval);
-    if (this.config.timerSeconds <= 0) {
-      $('exam-timer').textContent = '∞';
-      return;
-    }
-    this.timerInterval = setInterval(() => {
-      this.secondsLeft--;
-      this.updateTimerDisplay();
-      if (this.secondsLeft <= 0) {
-        clearInterval(this.timerInterval);
-        this.submit(true);
-      }
-    }, 1000);
+    if(this.config.timerSeconds<=0){$('exam-timer').textContent='Sin limite';return;}
+    this.timerInterval=setInterval(()=>{this.secondsLeft--;this.updateTimerDisplay();if(this.secondsLeft<=0){clearInterval(this.timerInterval);this.submit(true);}},1000);
     this.updateTimerDisplay();
   },
-
   updateTimerDisplay() {
-    const el = $('exam-timer');
-    if (!el) return;
-    el.textContent = formatTime(this.secondsLeft);
-    el.className = 'exam-timer';
-    if (this.secondsLeft < 60) el.classList.add('danger');
-    else if (this.secondsLeft < 120) el.classList.add('warn');
+    const el=$('exam-timer'); if(!el) return;
+    el.textContent=formatTime(this.secondsLeft);
+    el.className='exam-timer';
+    if(this.secondsLeft<60)el.classList.add('danger');
+    else if(this.secondsLeft<120)el.classList.add('warn');
   },
-
   render() {
-    const q = this.config.questions[this.currentQ];
-    const total = this.config.questions.length;
-    const progress = ((this.currentQ + 1) / total) * 100;
-
-    $('exam-q-label').textContent = `Pregunta ${this.currentQ + 1}`;
-    $('exam-q-count').textContent = `${this.currentQ + 1} / ${total}`;
-    $('exam-progress-fill').style.width = `${progress}%`;
-
-    const letters = ['A','B','C','D'];
-    const content = $('exam-content');
-    content.innerHTML = `
-      <div class="question-num">Pregunta ${this.currentQ + 1} de ${total}</div>
+    const q=this.config.questions[this.currentQ], total=this.config.questions.length;
+    const progress=((this.currentQ+1)/total)*100;
+    $('exam-q-label').textContent=`Pregunta ${this.currentQ+1}`;
+    $('exam-q-count').textContent=`${this.currentQ+1} / ${total}`;
+    $('exam-progress-fill').style.width=`${progress}%`;
+    const letters=['A','B','C','D'];
+    $('exam-content').innerHTML=`
+      <div class="question-num">Pregunta ${this.currentQ+1} de ${total}</div>
       <div class="question-text">${q.text}</div>
       <div class="options-grid">
-        ${q.options.map((opt, i) => `
-          <button class="option-btn ${this.answers[this.currentQ] === i ? 'selected' : ''}"
-            onclick="Exam.select(${i})">
+        ${q.options.map((opt,i)=>`
+          <button class="option-btn ${this.answers[this.currentQ]===i?'selected':''}" onclick="Exam.select(${i})">
             <span class="option-letter">${letters[i]}</span>
             <span>${opt.text}</span>
-          </button>
-        `).join('')}
-      </div>
-    `;
-
-    $('exam-prev-btn').style.visibility = this.currentQ === 0 ? 'hidden' : 'visible';
-
-    const isLast = this.currentQ === total - 1;
-    $('exam-next-btn').textContent = isLast ? '✅ Finalizar' : 'Siguiente →';
-    $('exam-next-btn').className = `btn ${isLast ? 'btn-accent' : 'btn-primary'}`;
+          </button>`).join('')}
+      </div>`;
+    $('exam-prev-btn').style.visibility=this.currentQ===0?'hidden':'visible';
+    const isLast=this.currentQ===total-1;
+    $('exam-next-btn').textContent=isLast?'Finalizar':'Siguiente';
+    $('exam-next-btn').className=`btn ${isLast?'btn-accent':'btn-primary'}`;
   },
-
   select(i) {
-    this.answers[this.currentQ] = i;
-    // Update UI
-    const btns = document.querySelectorAll('.option-btn');
-    btns.forEach((btn, idx) => {
-      btn.classList.toggle('selected', idx === i);
-    });
-    // Auto-save
+    this.answers[this.currentQ]=i;
+    document.querySelectorAll('.option-btn').forEach((btn,idx)=>btn.classList.toggle('selected',idx===i));
     this.saveProgress();
   },
-
-  prev() {
-    if (this.currentQ > 0) {
-      this.currentQ--;
-      this.render();
-    }
-  },
-
-  next() {
-    const total = this.config.questions.length;
-    if (this.currentQ < total - 1) {
-      this.currentQ++;
-      this.render();
-    } else {
-      this.confirmSubmit();
-    }
-  },
-
+  prev() { if(this.currentQ>0){this.currentQ--;this.render();} },
+  next() { const total=this.config.questions.length; if(this.currentQ<total-1){this.currentQ++;this.render();}else this.confirmSubmit(); },
   confirmSubmit() {
-    const unanswered = this.answers.filter(a => a === -1).length;
-    const msg = unanswered > 0
-      ? `Tienes ${unanswered} pregunta(s) sin responder. ¿Deseas finalizar de todas formas?`
-      : '¿Estás seguro de que deseas finalizar la evaluación?';
-
-    Modal.show('Finalizar Evaluación', `<p style="color:var(--text2);line-height:1.6">${msg}</p>`,
-      [
-        { label: 'Cancelar', style: 'ghost', fn: Modal.close },
-        { label: '✅ Finalizar', style: 'accent', fn: () => { Modal.close(); Exam.submit(false); } }
-      ]
-    );
+    const unanswered=this.answers.filter(a=>a===-1).length;
+    const msg=unanswered>0?`Tienes ${unanswered} pregunta(s) sin responder. Finalizar de todas formas?`:'Seguro que deseas finalizar la evaluacion?';
+    Modal.show('Finalizar Evaluacion',`<p style="color:var(--text2);line-height:1.6">${msg}</p>`,
+      [{label:'Cancelar',style:'ghost',fn:Modal.close},{label:'Finalizar',style:'accent',fn:()=>{Modal.close();Exam.submit(false);}}]);
   },
-
   saveProgress() {
-    const uid = this.config.studentUid;
-    db.ref(`exam/submissions/${uid}`).set({
-      answers: this.answers,
-      currentQ: this.currentQ,
-      submitted: false,
-      timestamp: Date.now()
-    });
+    db.ref(`exam/submissions/${this.config.studentUid}`).set({answers:this.answers, currentQ:this.currentQ, submitted:false, timestamp:Date.now()});
   },
-
   async submit(byTimer=false) {
     clearInterval(this.timerInterval);
-    const cfg = this.config;
-    const questions = cfg.questions;
-
-    // Score
-    let score = 0;
-    questions.forEach((q, i) => {
-      if (this.answers[i] === q.correctIndex) score++;
-    });
-
-    const timeUsed = Math.floor((Date.now() - this.startTime) / 1000);
-    const id = `result_${Date.now()}`;
-
-    const result = {
-      id,
-      testId: cfg.testId,
-      testName: cfg.testName,
-      score,
-      total: questions.length,
-      answers: this.answers,
-      questions: questions.map(q => ({ text: q.text, options: q.options, correctIndex: q.correctIndex })),
-      timeUsed,
-      date: Date.now(),
-      submitted: true
-    };
-
-    const uid = this.config.studentUid;
-
-    // Save submission
+    const cfg=this.config, questions=cfg.questions;
+    let score=0;
+    questions.forEach((q,i)=>{if(this.answers[i]===q.correctIndex)score++;});
+    const timeUsed=Math.floor((Date.now()-this.startTime)/1000);
+    const id=`result_${Date.now()}`;
+    const result={id, testId:cfg.testId, testName:cfg.testName, score, total:questions.length, answers:this.answers, questions:questions.map(q=>({text:q.text, options:q.options, correctIndex:q.correctIndex})), timeUsed, date:Date.now(), submitted:true, studentName:App.currentStudent.name, studentUser:App.currentStudent.user, studentLevel:App.currentStudent.level};
+    const uid=this.config.studentUid;
     await db.ref(`exam/submissions/${uid}`).set(result);
-
-    // Save to student history
-    await db.ref(`students/${uid}/history/${id}`).set({
-      id, testId: cfg.testId, testName: cfg.testName,
-      score, total: questions.length, date: Date.now(), timeUsed
-    });
-
-    // Show waiting screen
+    await db.ref(`students/${uid}/history/${id}`).set({id, testId:cfg.testId, testName:cfg.testName, score, total:questions.length, date:Date.now(), timeUsed});
     App.showScreen('screen-student');
-    $('exam-waiting-area').innerHTML = App.renderWaiting('✅', 'Evaluación enviada', 'Espera que el administrador muestre los resultados.');
-    $('stu-home-content').innerHTML = '';
-
-    if (byTimer) showToast('⏱️ Tiempo agotado. Evaluación enviada automáticamente.');
-    else showToast('✅ Evaluación enviada correctamente.');
+    const wa=$('exam-waiting-area'); if(wa) wa.innerHTML=App.renderWaiting('Listo','Evaluacion enviada','Espera que el administrador muestre los resultados.');
+    const hc=$('stu-home-content'); if(hc) hc.innerHTML='';
+    if(byTimer) showToast('Tiempo agotado. Evaluacion enviada automaticamente.');
+    else showToast('Evaluacion enviada correctamente.');
   }
 };
 
-// ══════════════════════════════════════════════════
-// ADMIN MODULE
-// ══════════════════════════════════════════════════
+// ── ADMIN ─────────────────────────────────────────
 const Admin = {
-  currentPage: 'dashboard',
-  importedQuestions: [],
-  listeners: [],
-
-  init() {
-    this.page('dashboard', document.querySelector('.admin-nav-item'));
-  },
-
+  currentPage:'dashboard', importedQuestions:[], listeners:[], studentsData:{},
+  init() { this.page('dashboard', document.querySelector('.admin-nav-item')); },
   page(name, btn) {
-    this.currentPage = name;
-    document.querySelectorAll('.admin-nav-item').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-
-    // Clear old listeners
-    this.clearListeners();
-
-    const titles = {
-      dashboard: 'Dashboard', monitor: 'Monitor en Vivo', tests: 'Biblioteca de Tests',
-      import: 'Importar Preguntas TXT', students: 'Estudiantes', results: 'Resultados'
-    };
-    $('admin-page-title').textContent = titles[name] || name;
-    $('admin-topbar-actions').innerHTML = '';
-
-    const pages = {
-      dashboard: () => this.renderDashboard(),
-      monitor: () => this.renderMonitor(),
-      tests: () => this.renderTests(),
-      import: () => this.renderImport(),
-      students: () => this.renderStudents(),
-      results: () => this.renderResults()
-    };
-    (pages[name] || (() => {}))();
+    this.currentPage=name; this.clearListeners();
+    document.querySelectorAll('.admin-nav-item').forEach(b=>b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    const titles={dashboard:'Dashboard',monitor:'Monitor en Vivo',tests:'Biblioteca Tests',import:'Importar TXT',students:'Estudiantes',results:'Resultados'};
+    $('admin-page-title').textContent=titles[name]||name;
+    $('admin-topbar-actions').innerHTML='';
+    ({dashboard:()=>this.renderDashboard(),monitor:()=>this.renderMonitor(),tests:()=>this.renderTests(),import:()=>this.renderImport(),students:()=>this.renderStudents(),results:()=>this.renderResults()})[name]?.();
   },
+  clearListeners() { this.listeners.forEach(r=>r.off()); this.listeners=[]; },
+  listen(ref, ev, cb) { ref.on(ev, cb); this.listeners.push(ref); },
+  toggleSidebar() { $('admin-sidebar').classList.toggle('open'); $('sidebar-overlay').classList.toggle('show'); },
+  closeSidebar() { $('admin-sidebar').classList.remove('open'); $('sidebar-overlay').classList.remove('show'); },
 
-  clearListeners() {
-    this.listeners.forEach(ref => ref.off());
-    this.listeners = [];
-  },
-
-  listen(ref, event, cb) {
-    ref.on(event, cb);
-    this.listeners.push(ref);
-  },
-
-  toggleSidebar() {
-    $('admin-sidebar').classList.toggle('open');
-    $('sidebar-overlay').classList.toggle('show');
-  },
-
-  closeSidebar() {
-    $('admin-sidebar').classList.remove('open');
-    $('sidebar-overlay').classList.remove('show');
-  },
-
-  // ── DASHBOARD ──────────────────────────────────
+  // DASHBOARD
   renderDashboard() {
-    $('admin-content').innerHTML = `
+    $('admin-content').innerHTML=`
       <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
         <div class="stat-card primary"><div class="stat-value" id="dash-online">-</div><div class="stat-label">Online</div></div>
         <div class="stat-card accent"><div class="stat-value" id="dash-done">-</div><div class="stat-label">Terminaron</div></div>
         <div class="stat-card gold"><div class="stat-value" id="dash-avg">-</div><div class="stat-label">Promedio</div></div>
-        <div class="stat-card sky"><div class="stat-value" id="dash-tests">-</div><div class="stat-label">Tests</div></div>
+        <div class="stat-card sky"><div class="stat-value" id="dash-students">-</div><div class="stat-label">Estudiantes</div></div>
       </div>
-
-      <div class="card">
-        <div class="card-title">Control de Evaluación</div>
-        <div id="exam-control-panel"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">📊 Rendimiento por Nivel</div>
-        <canvas id="levelChart" height="120"></canvas>
-      </div>
-    `;
-
-    this.listen(db.ref('students'), 'value', snap => {
-      const students = snap.val() || {};
-      const all = Object.values(students);
-      const online = all.filter(s => s.online).length;
-      const elOnline = $('dash-online');
-      const elTests = $('dash-tests');
-      if (elOnline) elOnline.textContent = online;
-      if (elTests) elTests.textContent = all.length;
+      <div class="card"><div class="card-title">Control de Evaluacion</div><div id="exam-control-panel"></div></div>
+      <div class="card"><div class="card-title">Estudiantes por Nivel</div><canvas id="levelChart" height="100"></canvas></div>`;
+    this.listen(db.ref('students'),'value',snap=>{
+      const students=snap.val()||{};
+      const all=Object.values(students);
+      const el1=$('dash-online'), el2=$('dash-students');
+      if(el1) el1.textContent=all.filter(s=>s.online).length;
+      if(el2) el2.textContent=all.length;
     });
-
-    this.listen(db.ref('exam/state'), 'value', snap => {
-      const state = snap.val() || {};
+    this.listen(db.ref('exam/state'),'value',snap=>{
+      const state=snap.val()||{};
       this.renderExamControl(state);
     });
-
-    this.listen(db.ref('exam/submissions'), 'value', snap => {
-      const subs = snap.val() || {};
-      const all = Object.values(subs).filter(s => s.submitted);
-      const done = all.length;
-      const avg = done ? Math.round(all.reduce((s,sub) => s+(sub.score/sub.total)*100, 0)/done) : 0;
-      const elDone = $('dash-done');
-      const elAvg = $('dash-avg');
-      if (elDone) elDone.textContent = done;
-      if (elAvg) elAvg.textContent = avg ? avg+'%' : '-';
+    this.listen(db.ref('exam/submissions'),'value',snap=>{
+      const subs=snap.val()||{};
+      const all=Object.values(subs).filter(s=>s.submitted);
+      const el1=$('dash-done'), el2=$('dash-avg');
+      if(el1) el1.textContent=all.length;
+      if(el2) el2.textContent=all.length?Math.round(all.reduce((s,sub)=>s+(sub.score/sub.total)*100,0)/all.length)+'%':'-';
     });
-
-    db.ref('tests').get().then(snap => {
-      const tests = snap.val() || {};
-      db.ref('students').get().then(stuSnap => {
-        const students = stuSnap.val() || {};
-        this.renderLevelChart(Object.values(students));
-      });
+    db.ref('students').get().then(snap=>{
+      const students=Object.values(snap.val()||{});
+      this.renderLevelChart(students);
     });
   },
 
   renderExamControl(state) {
-    const panel = $('exam-control-panel');
-    if (!panel) return;
-
-    if (!state.status || state.status === 'idle') {
-      panel.innerHTML = `
-        <div class="alert alert-info" style="margin-bottom:16px">Sin evaluación activa. Selecciona un test para comenzar.</div>
+    const panel=$('exam-control-panel'); if(!panel) return;
+    if(!state.status||state.status==='idle') {
+      panel.innerHTML=`
+        <div class="alert alert-info" style="margin-bottom:14px">Sin evaluacion activa.</div>
         <div id="test-select-wrap"></div>
-        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="Admin.startExamFlow()">▶ Iniciar Evaluación</button>
-        </div>
-      `;
+        <div style="display:flex;gap:9px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="Admin.startExamFlow()">Iniciar Evaluacion</button>
+        </div>`;
       this.loadTestSelector('test-select-wrap');
-    } else if (state.status === 'active') {
-      const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
-      const remaining = state.timerSeconds > 0 ? Math.max(0, state.timerSeconds - elapsed) : null;
-      panel.innerHTML = `
-        <div class="alert alert-success" style="margin-bottom:16px">
-          <span class="live-dot"></span>&nbsp; Evaluación activa: <strong>${state.testName || ''}</strong>
-          ${remaining !== null ? ` · ⏱ ${formatTime(remaining)} restantes` : ''}
+    } else if(state.status==='active') {
+      const elapsed=Math.floor((Date.now()-state.startedAt)/1000);
+      const remaining=state.timerSeconds>0?Math.max(0,state.timerSeconds-elapsed):null;
+      panel.innerHTML=`
+        <div class="alert alert-success" style="margin-bottom:14px">
+          <span class="live-dot"></span>&nbsp; Activa: <strong>${state.testName||''}</strong>${state.targetLevel&&state.targetLevel!=='todos'?` | Curso: ${state.targetLevel}`:''}
+          ${remaining!==null?` | Tiempo: ${formatTime(remaining)}`:''}
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn btn-accent" onclick="Admin.showResults()">🏆 Mostrar Resultados</button>
-          <button class="btn btn-danger" onclick="Admin.stopExam()">⏹ Detener</button>
-        </div>
-      `;
-    } else if (state.status === 'results') {
-      panel.innerHTML = `
-        <div class="alert alert-warn" style="margin-bottom:16px">
-          Resultados publicados para: <strong>${state.testName || ''}</strong>
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn btn-danger" onclick="Admin.resetExam()">🔄 Nueva Evaluación</button>
-        </div>
-      `;
+        <div style="display:flex;gap:9px;flex-wrap:wrap">
+          <button class="btn btn-accent" onclick="Admin.showResults()">Mostrar Resultados</button>
+          <button class="btn btn-danger" onclick="Admin.stopExam()">Detener</button>
+        </div>`;
+    } else if(state.status==='results') {
+      panel.innerHTML=`
+        <div class="alert alert-warn" style="margin-bottom:14px">Resultados publicados: <strong>${state.testName||''}</strong></div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap">
+          <button class="btn btn-danger" onclick="Admin.resetExam()">Nueva Evaluacion</button>
+        </div>`;
     }
   },
 
   renderLevelChart(students) {
-    const canvas = $('levelChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-
-    const levels = {};
-    students.forEach(s => {
-      if (s.level) levels[s.level] = (levels[s.level]||0)+1;
-    });
-
-    const labels = Object.keys(levels);
-    const data = Object.values(levels);
-
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Estudiantes',
-          data,
-          backgroundColor: 'rgba(108,99,255,0.6)',
-          borderColor: 'rgba(108,99,255,1)',
-          borderWidth: 1,
-          borderRadius: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: '#9da3c4', font: { size: 11 } }, grid: { color: '#2a2f4a' } },
-          y: { ticks: { color: '#9da3c4', stepSize: 1 }, grid: { color: '#2a2f4a' }, beginAtZero: true }
-        }
-      }
-    });
+    const canvas=$('levelChart'); if(!canvas) return;
+    if(canvas._chart) canvas._chart.destroy();
+    const levels={};
+    students.forEach(s=>{if(s.level) levels[s.level]=(levels[s.level]||0)+1;});
+    const ctx=canvas.getContext('2d');
+    canvas._chart=new Chart(ctx,{type:'bar',data:{labels:Object.keys(levels),datasets:[{label:'Estudiantes',data:Object.values(levels),backgroundColor:'rgba(108,99,255,.6)',borderColor:'rgba(108,99,255,1)',borderWidth:1,borderRadius:5}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#9da3c4',font:{size:10}},grid:{color:'#2a2f4a'}},y:{ticks:{color:'#9da3c4',stepSize:1},grid:{color:'#2a2f4a'},beginAtZero:true}}}});
   },
 
   async loadTestSelector(containerId) {
-    const snap = await db.ref('tests').get();
-    const tests = snap.val() || {};
-    const items = Object.values(tests);
-    const container = $(containerId);
-    if (!container) return;
-
-    if (!items.length) {
-      container.innerHTML = `<div style="color:var(--text3);font-size:14px">No hay tests en la biblioteca. <button class="btn btn-ghost btn-sm" onclick="Admin.page('import',null)">Importar uno →</button></div>`;
-      return;
-    }
-
-    container.innerHTML = `
-      <div class="form-group">
-        <label class="form-label">Seleccionar Test</label>
+    const snap=await db.ref('tests').get();
+    const tests=snap.val()||{};
+    const items=Object.values(tests);
+    const container=$(containerId); if(!container) return;
+    if(!items.length){container.innerHTML=`<div style="color:var(--text3);font-size:13px">No hay tests. <button class="btn btn-ghost btn-sm" onclick="Admin.page('import',null)">Importar uno</button></div>`;return;}
+    const levelOptions=LEVELS.map(l=>`<option value="${l}">${l}</option>`).join('');
+    container.innerHTML=`
+      <div class="form-group"><label class="form-label">Seleccionar Test</label>
         <select class="form-select" id="exam-test-select">
           <option value="">-- Elegir test --</option>
-          ${items.map(t => `<option value="${t.id}">${t.name} (${t.questions?.length||0} preguntas)</option>`).join('')}
+          ${items.map(t=>`<option value="${t.id}">${t.name} (${t.questions?.length||0} preguntas)</option>`).join('')}
         </select>
       </div>
-      <div class="form-group">
-        <label class="form-label">Tiempo (minutos, 0 = sin límite)</label>
-        <input type="number" class="form-input" id="exam-timer-input" value="30" min="0" max="180">
+      <div class="form-group"><label class="form-label">Asignar a curso (nivel)</label>
+        <select class="form-select" id="exam-level-select">
+          <option value="todos">Todos los estudiantes</option>
+          ${levelOptions}
+        </select>
       </div>
-    `;
+      <div class="form-group"><label class="form-label">Tiempo en minutos (0 = sin limite)</label>
+        <input type="number" class="form-input" id="exam-timer-input" value="30" min="0" max="180">
+      </div>`;
   },
 
   async startExamFlow() {
-    const sel = $('exam-test-select');
-    if (!sel || !sel.value) return showToast('⚠️ Selecciona un test primero.');
-    const testId = sel.value;
-    const mins = parseInt($('exam-timer-input')?.value || '0');
-
-    const snap = await db.ref(`tests/${testId}`).get();
-    if (!snap.exists()) return showToast('Test no encontrado.');
-    const test = snap.val();
-
-    await db.ref('exam/state').set({
-      status: 'active',
-      testId,
-      testName: test.name,
-      timerSeconds: mins * 60,
-      startedAt: Date.now()
-    });
-
-    // Clear old submissions
+    const sel=$('exam-test-select');
+    if(!sel||!sel.value) return showToast('Selecciona un test primero.');
+    const testId=sel.value;
+    const mins=parseInt($('exam-timer-input')?.value||'0');
+    const targetLevel=$('exam-level-select')?.value||'todos';
+    const snap=await db.ref(`tests/${testId}`).get();
+    if(!snap.exists()) return showToast('Test no encontrado.');
+    const test=snap.val();
+    await db.ref('exam/state').set({status:'active',testId,testName:test.name,timerSeconds:mins*60,startedAt:Date.now(),targetLevel});
     await db.ref('exam/submissions').remove();
-
-    showToast(`▶ Evaluación iniciada: ${test.name}`);
+    showToast(`Evaluacion iniciada: ${test.name}${targetLevel!=='todos'?' para '+targetLevel:''}`);
   },
 
   async showResults() {
-    const snap = await db.ref('exam/state').get();
-    const state = snap.val() || {};
-    await db.ref('exam/state').update({ status: 'results' });
-    showToast('🏆 Resultados publicados para estudiantes.');
+    await db.ref('exam/state').update({status:'results'});
+    showToast('Resultados publicados para estudiantes.');
   },
 
-  async stopExam() {
-    Modal.show('Detener Evaluación', '<p style="color:var(--text2)">¿Detener la evaluación sin publicar resultados? Los datos no se perderán.</p>',
-      [
-        { label: 'Cancelar', style: 'ghost', fn: Modal.close },
-        { label: 'Detener', style: 'danger', fn: async () => {
-          Modal.close();
-          await db.ref('exam/state').set({ status: 'idle' });
-          showToast('⏹ Evaluación detenida.');
-        }}
-      ]
-    );
+  stopExam() {
+    Modal.show('Detener Evaluacion','<p style="color:var(--text2)">Detener sin publicar resultados?</p>',
+      [{label:'Cancelar',style:'ghost',fn:Modal.close},{label:'Detener',style:'danger',fn:async()=>{Modal.close();await db.ref('exam/state').set({status:'idle'});showToast('Evaluacion detenida.');}}]);
   },
 
-  async resetExam() {
-    Modal.show('Nueva Evaluación', '<p style="color:var(--text2)">¿Reiniciar? Se limpiarán las respuestas actuales (el historial de estudiantes se mantiene).</p>',
-      [
-        { label: 'Cancelar', style: 'ghost', fn: Modal.close },
-        { label: 'Reiniciar', style: 'danger', fn: async () => {
-          Modal.close();
-          await db.ref('exam/state').set({ status: 'idle' });
-          await db.ref('exam/submissions').remove();
-          showToast('🔄 Listo para nueva evaluación.');
-        }}
-      ]
-    );
+  resetExam() {
+    Modal.show('Nueva Evaluacion','<p style="color:var(--text2)">Reiniciar? Se limpiaran las respuestas actuales (historial se mantiene).</p>',
+      [{label:'Cancelar',style:'ghost',fn:Modal.close},{label:'Reiniciar',style:'danger',fn:async()=>{Modal.close();await db.ref('exam/state').set({status:'idle'});await db.ref('exam/submissions').remove();showToast('Listo para nueva evaluacion.');}}]);
   },
 
-  // ── MONITOR ────────────────────────────────────
+  // MONITOR
   renderMonitor() {
-    $('admin-content').innerHTML = `
-      <div id="monitor-stats" class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px"></div>
-      <div id="monitor-grid" class="monitor-grid"></div>
-    `;
-
-    this.listen(db.ref('students'), 'value', snap => {
-      const students = snap.val() || {};
-      db.ref('exam/submissions').get().then(subSnap => {
-        const subs = subSnap.val() || {};
-        this.updateMonitor(students, subs);
+    $('admin-content').innerHTML=`
+      <div id="monitor-stats" class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px"></div>
+      <div id="monitor-grid" class="monitor-grid"></div>`;
+    const update=()=>{
+      db.ref('students').get().then(stuSnap=>{
+        db.ref('exam/submissions').get().then(subSnap=>{
+          this.updateMonitor(stuSnap.val()||{}, subSnap.val()||{});
+        });
       });
-    });
-
-    this.listen(db.ref('exam/submissions'), 'value', snap => {
-      const subs = snap.val() || {};
-      db.ref('students').get().then(stuSnap => {
-        const students = stuSnap.val() || {};
-        this.updateMonitor(students, subs);
-      });
-    });
+    };
+    this.listen(db.ref('students'),'value',()=>update());
+    this.listen(db.ref('exam/submissions'),'value',()=>update());
+    update();
+    // Also listen to exam state to know total questions
+    this.listen(db.ref('exam/state'),'value',snap=>{ this.examStateAdmin=snap.val()||{}; update(); });
   },
 
   updateMonitor(students, subs) {
-    const all = Object.values(students);
-    const online = all.filter(s => s.online);
-    const done = Object.values(subs).filter(s => s.submitted);
-    const avg = done.length ? Math.round(done.reduce((a,s) => a+(s.score/s.total)*100, 0)/done.length) : 0;
-
-    const statsEl = $('monitor-stats');
-    if (statsEl) statsEl.innerHTML = `
+    const all=Object.values(students);
+    const online=all.filter(s=>s.online);
+    const done=Object.values(subs).filter(s=>s.submitted);
+    const avg=done.length?Math.round(done.reduce((a,s)=>a+(s.score/s.total)*100,0)/done.length):0;
+    const statsEl=$('monitor-stats');
+    if(statsEl) statsEl.innerHTML=`
       <div class="stat-card primary"><div class="stat-value">${online.length}</div><div class="stat-label">Online</div></div>
       <div class="stat-card accent"><div class="stat-value">${done.length}</div><div class="stat-label">Terminaron</div></div>
-      <div class="stat-card gold"><div class="stat-value">${avg||'-'}${avg?'%':''}</div><div class="stat-label">Promedio</div></div>
-    `;
-
-    const grid = $('monitor-grid');
-    if (!grid) return;
-
-    if (!all.length) {
-      grid.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><h3>Sin estudiantes</h3></div>`;
-      return;
-    }
-
-    grid.innerHTML = all.map(s => {
-      const sub = subs[s.user ? safeKey(s.user) : ''] || null;
-      const isDone = sub && sub.submitted;
-      const pct = isDone ? Math.round((sub.score/sub.total)*100) : null;
-      const progress = sub && !isDone ? `${sub.currentQ !== undefined ? sub.currentQ+1 : '?'}/${sub.total||'?'}` : '';
-
-      return `<div class="monitor-card ${isDone?'done':''}">
-        <div style="display:flex;align-items:center;gap:8px;justify-content:space-between">
+      <div class="stat-card gold"><div class="stat-value">${avg||'-'}${avg?'%':''}</div><div class="stat-label">Promedio</div></div>`;
+    const grid=$('monitor-grid'); if(!grid) return;
+    if(!all.length){grid.innerHTML=`<div class="empty-state"><div class="empty-icon">&#128101;</div><h3>Sin estudiantes</h3></div>`;return;}
+    const state=this.examStateAdmin||{};
+    grid.innerHTML=all.map(s=>{
+      const uid=safeKey(s.user||'');
+      const sub=subs[uid]||null;
+      const isDone=sub&&sub.submitted;
+      const pct=isDone?Math.round((sub.score/sub.total)*100):null;
+      const totalQ=state.status==='active'?(sub?.total||0):0;
+      const answeredQ=(!isDone&&sub&&sub.answers)?sub.answers.filter(a=>a!==-1).length:0;
+      const progPct=totalQ>0?Math.round((answeredQ/totalQ)*100):isDone?100:0;
+      const progLabel=isDone?'Completado':totalQ>0?`${answeredQ}/${totalQ} respondidas`:'Esperando...';
+      return `<div class="monitor-card ${isDone?'done':sub&&!isDone?'active-exam':''}">
+        <div style="display:flex;align-items:center;justify-content:space-between">
           <div class="monitor-name">${s.name||s.user}</div>
-          ${s.online ? '<span class="badge badge-success" style="font-size:9px">●</span>' : '<span class="badge badge-gray" style="font-size:9px">○</span>'}
+          <span class="badge ${s.online?'badge-success':'badge-gray'}" style="font-size:9px">${s.online?'Online':'Offline'}</span>
         </div>
         <div class="monitor-level">${s.level||''}</div>
-        ${isDone ? `<div class="monitor-score">${pct}%</div><div class="badge badge-success">Terminó</div>` :
-          progress ? `<div class="monitor-prog">Pregunta ${progress}</div>` :
-          '<div class="badge badge-gray">Esperando</div>'}
+        <div class="monitor-prog-label"><span>${progLabel}</span>${isDone?`<span style="color:var(--ok)">${pct}%</span>`:''}</div>
+        <div class="monitor-prog-bar-wrap"><div class="monitor-prog-bar" style="width:${progPct}%"></div></div>
+        ${isDone?`<div class="monitor-score">${pct}%</div>`:sub&&!isDone&&totalQ?`<div style="font-size:10px;color:var(--text3)">${progPct}% completado</div>`:''}
       </div>`;
     }).join('');
   },
 
-  // ── TESTS LIBRARY ──────────────────────────────
+  // TESTS
   renderTests() {
-    $('admin-topbar-actions').innerHTML = `<button class="btn btn-primary btn-sm" onclick="Admin.page('import',null)">+ Importar TXT</button>`;
-
-    const content = $('admin-content');
-    content.innerHTML = `<div id="tests-grid" class="test-grid"></div>`;
-
-    this.listen(db.ref('tests'), 'value', snap => {
-      const tests = snap.val() || {};
-      const items = Object.values(tests).sort((a,b) => b.createdAt - a.createdAt);
-      const grid = $('tests-grid');
-      if (!grid) return;
-
-      if (!items.length) {
-        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
-          <div class="empty-icon">📚</div>
-          <h3>Biblioteca vacía</h3>
-          <p>Importa tu primer test desde un archivo TXT.</p>
-          <button class="btn btn-primary" style="margin-top:16px" onclick="Admin.page('import',null)">+ Importar TXT</button>
-        </div>`;
-        return;
-      }
-
-      grid.innerHTML = items.map(t => `
+    $('admin-topbar-actions').innerHTML=`<button class="btn btn-primary btn-sm" onclick="Admin.page('import',null)">+ Importar TXT</button>`;
+    $('admin-content').innerHTML=`<div id="tests-grid" class="test-grid"></div>`;
+    this.listen(db.ref('tests'),'value',snap=>{
+      const tests=snap.val()||{};
+      const items=Object.values(tests).sort((a,b)=>b.createdAt-a.createdAt);
+      const grid=$('tests-grid'); if(!grid) return;
+      if(!items.length){grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">&#128218;</div><h3>Biblioteca vacia</h3><p>Importa tu primer test.</p><button class="btn btn-primary" style="margin-top:14px" onclick="Admin.page('import',null)">+ Importar TXT</button></div>`;return;}
+      grid.innerHTML=items.map(t=>`
         <div class="test-card">
           <div class="test-card-title">${t.name}</div>
-          <div class="test-card-meta">${t.questions?.length||0} preguntas · ${formatDate(t.createdAt)}</div>
+          <div class="test-card-meta">${t.questions?.length||0} preguntas - ${formatDate(t.createdAt)}</div>
           <div class="test-card-actions">
-            <button class="btn btn-primary btn-sm" onclick="Admin.previewTest('${t.id}')">👁 Ver</button>
-            <button class="btn btn-ghost btn-sm" onclick="Admin.duplicateTest('${t.id}')">📋 Dup</button>
-            <button class="btn btn-danger btn-sm" onclick="Admin.deleteTest('${t.id}')">🗑</button>
+            <button class="btn btn-primary btn-sm" onclick="Admin.previewTest('${t.id}')">Ver</button>
+            <button class="btn btn-ghost btn-sm" onclick="Admin.duplicateTest('${t.id}')">Duplicar</button>
+            <button class="btn btn-danger btn-sm" onclick="Admin.deleteTest('${t.id}')">Eliminar</button>
           </div>
-        </div>
-      `).join('');
+        </div>`).join('');
     });
   },
 
   async previewTest(id) {
-    const snap = await db.ref(`tests/${id}`).get();
-    if (!snap.exists()) return;
-    const test = snap.val();
-
-    Modal.show(`📚 ${test.name}`,
-      `<div style="max-height:60vh;overflow-y:auto">
-        ${(test.questions||[]).map((q,i) => `
-          <div class="preview-q">
-            <div class="preview-q-text">${i+1}. ${q.text}</div>
-            ${q.options.map(o => `
-              <div class="preview-option ${o.isCorrect?'correct':''}">${o.isCorrect?'✅':''} ${o.letter}. ${o.text}</div>
-            `).join('')}
-          </div>
-        `).join('')}
+    const snap=await db.ref(`tests/${id}`).get(); if(!snap.exists()) return;
+    const test=snap.val();
+    Modal.show(`${test.name}`,`<div style="max-height:60vh;overflow-y:auto">
+      ${(test.questions||[]).map((q,i)=>`
+        <div class="preview-q">
+          <div class="preview-q-text">${i+1}. ${q.text}</div>
+          ${q.options.map(o=>`<div class="preview-option ${o.isCorrect?'correct':''}">${o.isCorrect?'[OK]':o.letter+'.'} ${o.text}</div>`).join('')}
+        </div>`).join('')}
       </div>`,
-      [{ label: 'Cerrar', style: 'ghost', fn: Modal.close }]
-    );
+      [{label:'Cerrar',style:'ghost',fn:Modal.close}]);
   },
 
   async duplicateTest(id) {
-    const snap = await db.ref(`tests/${id}`).get();
-    if (!snap.exists()) return;
-    const test = snap.val();
-    const newId = `test_${Date.now()}`;
-    const newTest = { ...deepCopy(test), id: newId, name: test.name + ' (Copia)', createdAt: Date.now() };
-    await db.ref(`tests/${newId}`).set(newTest);
-    showToast('📋 Test duplicado.');
+    const snap=await db.ref(`tests/${id}`).get(); if(!snap.exists()) return;
+    const test=snap.val();
+    const newId=`test_${Date.now()}`;
+    await db.ref(`tests/${newId}`).set({...deepCopy(test),id:newId,name:test.name+' (Copia)',createdAt:Date.now()});
+    showToast('Test duplicado.');
   },
 
   deleteTest(id) {
-    Modal.show('Eliminar Test', '<p style="color:var(--text2)">¿Estás seguro? Esta acción no se puede deshacer.</p>',
-      [
-        { label: 'Cancelar', style: 'ghost', fn: Modal.close },
-        { label: 'Eliminar', style: 'danger', fn: async () => {
-          await db.ref(`tests/${id}`).remove();
-          Modal.close();
-          showToast('🗑 Test eliminado.');
-        }}
-      ]
-    );
+    Modal.show('Eliminar Test','<p style="color:var(--text2)">Esta accion no se puede deshacer.</p>',
+      [{label:'Cancelar',style:'ghost',fn:Modal.close},{label:'Eliminar',style:'danger',fn:async()=>{await db.ref(`tests/${id}`).remove();Modal.close();showToast('Test eliminado.');}}]);
   },
 
-  // ── IMPORT ─────────────────────────────────────
+  // IMPORT
   renderImport() {
-    this.importedQuestions = [];
-    $('admin-content').innerHTML = `
+    this.importedQuestions=[];
+    $('admin-content').innerHTML=`
       <div class="card">
-        <div class="card-title">📥 Importar desde TXT</div>
-        <div class="alert alert-info" style="margin-bottom:16px">
-          <div>Pega preguntas en el formato oficial. La letra <strong>R</strong> al final indica la respuesta correcta.</div>
+        <div class="card-title">Importar desde TXT</div>
+        <div class="alert alert-info" style="margin-bottom:14px">Pega preguntas en el formato oficial. La letra R al final indica la respuesta correcta.</div>
+        <div style="font-family:'Courier New',monospace;font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;line-height:1.9;color:var(--text2)">
+1. Cual es la capital de Bolivia?<br>A. Santa Cruz<br>B. Cochabamba<br>C. Sucre R<br>D. La Paz<br><br>2. Cuantas notas musicales existen?<br>A. 7 R<br>B. 5<br>C. 8<br>D. 12
         </div>
-        <div style="font-family:monospace;font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px;line-height:1.8;color:var(--text2)">
-1. ¿Cuál es la capital de Bolivia?<br>
-A. Santa Cruz<br>
-B. Cochabamba<br>
-C. Sucre R<br>
-D. La Paz
+        <div class="form-group"><label class="form-label">Pegar texto o subir .txt</label>
+          <textarea class="import-textarea" id="import-text" placeholder="Pega aqui las preguntas..."></textarea>
         </div>
-        <div class="form-group">
-          <label class="form-label">Pegar texto o subir .txt</label>
-          <textarea class="import-textarea" id="import-text" placeholder="Pega aquí las preguntas..."></textarea>
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;gap:9px;flex-wrap:wrap">
           <input type="file" id="txt-file" accept=".txt" style="display:none" onchange="Admin.loadTxt(this)">
-          <button class="btn btn-ghost btn-sm" onclick="$('txt-file').click()">📂 Subir .txt</button>
-          <button class="btn btn-primary" onclick="Admin.parseImport()">🔍 Analizar</button>
-          <button class="btn btn-ghost btn-sm" onclick="$('import-text').value='';$('import-preview').innerHTML=''">✕ Limpiar</button>
+          <button class="btn btn-ghost btn-sm" onclick="$('txt-file').click()">Subir .txt</button>
+          <button class="btn btn-primary" onclick="Admin.parseImport()">Analizar</button>
+          <button class="btn btn-ghost btn-sm" onclick="$('import-text').value='';$('import-preview').innerHTML=''">Limpiar</button>
         </div>
       </div>
-
       <div id="import-preview"></div>
-
       <div id="import-save-section" class="hidden">
         <div class="card">
           <div class="card-title">Guardar en Biblioteca</div>
-          <div class="form-group">
-            <label class="form-label">Nombre del Test</label>
-            <input class="form-input" id="test-name-input" placeholder="Ej: Teoría Musical Nivel 1">
-          </div>
-          <button class="btn btn-accent" onclick="Admin.saveTest()">💾 Guardar Test</button>
+          <div class="form-group"><label class="form-label">Nombre del Test</label><input class="form-input" id="test-name-input" placeholder="Ej: Teoria Musical Nivel 1"></div>
+          <button class="btn btn-accent" onclick="Admin.saveTest()">Guardar Test</button>
         </div>
-      </div>
-    `;
+      </div>`;
   },
 
   loadTxt(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      $('import-text').value = e.target.result;
-      this.parseImport();
-    };
-    reader.readAsText(file, 'UTF-8');
+    const file=input.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=e=>{ $('import-text').value=e.target.result; this.parseImport(); };
+    reader.readAsText(file,'UTF-8');
   },
 
   parseImport() {
-    const text = $('import-text').value;
-    if (!text.trim()) return showToast('⚠️ El campo está vacío.');
-
-    const questions = Parser.parse(text);
-    this.importedQuestions = questions;
-
-    const preview = $('import-preview');
-    if (!questions.length) {
-      preview.innerHTML = `<div class="alert alert-error">❌ No se encontraron preguntas válidas. Revisa el formato.</div>`;
-      $('import-save-section').classList.add('hidden');
-      return;
-    }
-
-    preview.innerHTML = `
-      <div class="alert alert-success">✅ ${questions.length} pregunta(s) importada(s) correctamente.</div>
-      <div class="card">
-        <div class="card-title">Vista previa</div>
-        ${questions.map((q,i) => `
+    const text=$('import-text').value;
+    if(!text.trim()) return showToast('El campo esta vacio.');
+    const questions=Parser.parse(text);
+    this.importedQuestions=questions;
+    const preview=$('import-preview');
+    if(!questions.length){preview.innerHTML=`<div class="alert alert-error">No se encontraron preguntas validas. Revisa el formato.</div>`;$('import-save-section').classList.add('hidden');return;}
+    preview.innerHTML=`
+      <div class="alert alert-success">${questions.length} pregunta(s) importada(s) correctamente.</div>
+      <div class="card"><div class="card-title">Vista previa</div>
+        ${questions.map((q,i)=>`
           <div class="preview-q">
             <div class="preview-q-text">${i+1}. ${q.text}</div>
-            ${q.options.map(o => `
-              <div class="preview-option ${o.isCorrect?'correct':''}">${o.isCorrect?'✅':o.letter+'.'} ${o.text}</div>
-            `).join('')}
-          </div>
-        `).join('')}
-      </div>
-    `;
-
+            ${q.options.map(o=>`<div class="preview-option ${o.isCorrect?'correct':''}">${o.isCorrect?'[OK]':o.letter+'.'} ${o.text}</div>`).join('')}
+          </div>`).join('')}
+      </div>`;
     $('import-save-section').classList.remove('hidden');
-    showToast(`✅ ${questions.length} preguntas listas.`);
+    showToast(`${questions.length} preguntas listas.`);
   },
 
   async saveTest() {
-    const name = $('test-name-input').value.trim();
-    if (!name) return showToast('⚠️ Escribe un nombre para el test.');
-    if (!this.importedQuestions.length) return showToast('⚠️ No hay preguntas para guardar.');
-
-    const id = `test_${Date.now()}`;
-    await db.ref(`tests/${id}`).set({
-      id, name,
-      questions: this.importedQuestions,
-      createdAt: Date.now()
-    });
-
-    showToast(`💾 Test "${name}" guardado con ${this.importedQuestions.length} preguntas.`);
-    $('import-text').value = '';
-    $('test-name-input').value = '';
-    $('import-preview').innerHTML = '';
-    $('import-save-section').classList.add('hidden');
-    this.importedQuestions = [];
+    const name=$('test-name-input').value.trim();
+    if(!name) return showToast('Escribe un nombre para el test.');
+    if(!this.importedQuestions.length) return showToast('No hay preguntas para guardar.');
+    const id=`test_${Date.now()}`;
+    await db.ref(`tests/${id}`).set({id, name, questions:this.importedQuestions, createdAt:Date.now()});
+    showToast(`Test "${name}" guardado con ${this.importedQuestions.length} preguntas.`);
+    $('import-text').value=''; $('test-name-input').value='';
+    $('import-preview').innerHTML=''; $('import-save-section').classList.add('hidden');
+    this.importedQuestions=[];
   },
 
-  // ── STUDENTS ───────────────────────────────────
+  // STUDENTS
   renderStudents() {
-    $('admin-topbar-actions').innerHTML = `<button class="btn btn-primary btn-sm" onclick="Admin.addStudentModal()">+ Agregar</button>`;
-
-    $('admin-content').innerHTML = `
+    $('admin-topbar-actions').innerHTML=`<button class="btn btn-primary btn-sm" onclick="Admin.addStudentModal()">+ Agregar</button>`;
+    $('admin-content').innerHTML=`
       <div class="card" style="overflow-x:auto">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-          <input class="form-input" id="stu-search" placeholder="Buscar estudiante..." oninput="Admin.filterStudents(this.value)" style="max-width:260px">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
+          <input class="form-input" id="stu-search" placeholder="Buscar estudiante..." oninput="Admin.filterStudents(this.value)" style="max-width:240px">
         </div>
         <table class="data-table">
-          <thead><tr>
-            <th>Nombre</th><th>Usuario</th><th>Nivel</th><th>Estado</th><th>Acciones</th>
-          </tr></thead>
+          <thead><tr><th>Nombre</th><th>Usuario</th><th>Nivel</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody id="students-tbody"></tbody>
         </table>
-      </div>
-    `;
-
-    this.listen(db.ref('students'), 'value', snap => {
-      this.studentsData = snap.val() || {};
+      </div>`;
+    this.listen(db.ref('students'),'value',snap=>{
+      this.studentsData=snap.val()||{};
       this.renderStudentsTable(Object.values(this.studentsData));
     });
   },
 
-  filterStudents(query) {
-    const all = Object.values(this.studentsData || {});
-    const q = query.toLowerCase();
-    const filtered = q ? all.filter(s => (s.name||'').toLowerCase().includes(q)||(s.user||'').toLowerCase().includes(q)) : all;
-    this.renderStudentsTable(filtered);
+  filterStudents(q) {
+    const all=Object.values(this.studentsData||{});
+    const ql=q.toLowerCase();
+    this.renderStudentsTable(ql?all.filter(s=>(s.name||'').toLowerCase().includes(ql)||(s.user||'').toLowerCase().includes(ql)):all);
   },
 
   renderStudentsTable(students) {
-    const tbody = $('students-tbody');
-    if (!tbody) return;
-    if (!students.length) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:32px">Sin estudiantes registrados</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = students.map(s => `
-      <tr>
-        <td class="name-cell">${s.name||'-'}</td>
-        <td>${s.user||'-'}</td>
-        <td><span class="chip">${s.level||'-'}</span></td>
-        <td>${s.online ? '<span class="badge badge-success">● Online</span>' : '<span class="badge badge-gray">Offline</span>'}</td>
-        <td style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn btn-ghost btn-sm" onclick="Admin.editStudentModal('${s.user}')">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="Admin.deleteStudent('${safeKey(s.user||'')}','${s.name||s.user}')">🗑</button>
-        </td>
-      </tr>
-    `).join('');
+    const tbody=$('students-tbody'); if(!tbody) return;
+    if(!students.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:28px">Sin estudiantes registrados</td></tr>`;return;}
+    tbody.innerHTML=students.map(s=>`<tr>
+      <td class="name-cell">${s.name||'-'}</td>
+      <td>${s.user||'-'}</td>
+      <td><span class="chip">${s.level||'-'}</span></td>
+      <td>${s.online?'<span class="badge badge-success">Online</span>':'<span class="badge badge-gray">Offline</span>'}</td>
+      <td style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="Admin.editStudentModal('${s.user}')">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="Admin.deleteStudent('${safeKey(s.user||'')}','${s.name||s.user}')">Eliminar</button>
+      </td>
+    </tr>`).join('');
   },
 
   addStudentModal() {
-    Modal.show('Agregar Estudiante', `
+    const levelOptions=LEVELS.map(l=>`<option value="${l}">${l}</option>`).join('');
+    Modal.show('Agregar Estudiante',`
       <div id="add-stu-alert"></div>
       <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" id="add-stu-name"></div>
       <div class="form-group"><label class="form-label">Usuario</label><input class="form-input" id="add-stu-user"></div>
-      <div class="form-group"><label class="form-label">Contraseña</label><input class="form-input" type="password" id="add-stu-pass"></div>
-      <div class="form-group"><label class="form-label">Nivel</label>
-        <select class="form-select" id="add-stu-level">
-          <option value="">Selecciona nivel</option>
-          <optgroup label="PRIMARIA">
-            <option>1ro Primaria</option><option>2do Primaria</option><option>3ro Primaria</option>
-            <option>4to Primaria</option><option>5to Primaria</option><option>6to Primaria</option>
-          </optgroup>
-          <optgroup label="SECUNDARIA">
-            <option>1ro Secundaria</option><option>2do Secundaria</option><option>3ro Secundaria</option>
-            <option>4to Secundaria</option><option>5to Secundaria</option><option>6to Secundaria</option>
-          </optgroup>
-        </select>
-      </div>
-    `, [
-      { label: 'Cancelar', style: 'ghost', fn: Modal.close },
-      { label: 'Guardar', style: 'accent', fn: Admin.saveNewStudent.bind(Admin) }
-    ]);
+      <div class="form-group"><label class="form-label">Contrasena</label><input class="form-input" type="password" id="add-stu-pass"></div>
+      <div class="form-group"><label class="form-label">Nivel</label><select class="form-select" id="add-stu-level"><option value="">Selecciona nivel</option>${levelOptions}</select></div>`,
+      [{label:'Cancelar',style:'ghost',fn:Modal.close},{label:'Guardar',style:'accent',fn:Admin.saveNewStudent.bind(Admin)}]);
   },
 
   async saveNewStudent() {
-    const name = $('add-stu-name').value.trim();
-    const user = $('add-stu-user').value.trim().toLowerCase();
-    const pass = $('add-stu-pass').value.trim();
-    const level = $('add-stu-level').value;
-    if (!name||!user||!pass||!level) return setAlert('add-stu-alert','⚠️ Completa todos los campos.','warn');
-
-    const key = safeKey(user);
-    const snap = await db.ref(`students/${key}`).get();
-    if (snap.exists()) return setAlert('add-stu-alert','❌ Usuario ya existe.','error');
-
-    await db.ref(`students/${key}`).set({ user, password: pass, name, level, online: false, createdAt: Date.now() });
-    Modal.close();
-    showToast(`✅ Estudiante ${name} agregado.`);
+    const name=$('add-stu-name').value.trim(), user=$('add-stu-user').value.trim().toLowerCase();
+    const pass=$('add-stu-pass').value.trim(), level=$('add-stu-level').value;
+    if(!name||!user||!pass||!level) return setAlert('add-stu-alert','Completa todos los campos.','warn');
+    const key=safeKey(user);
+    const snap=await db.ref(`students/${key}`).get();
+    if(snap.exists()) return setAlert('add-stu-alert','Usuario ya existe.','error');
+    await db.ref(`students/${key}`).set({user, password:pass, name, level, online:false, createdAt:Date.now()});
+    Modal.close(); showToast(`Estudiante ${name} agregado.`);
   },
 
   async editStudentModal(user) {
-    const key = safeKey(user);
-    const snap = await db.ref(`students/${key}`).get();
-    if (!snap.exists()) return;
-    const s = snap.val();
-
-    Modal.show('Editar Estudiante', `
+    const key=safeKey(user);
+    const snap=await db.ref(`students/${key}`).get(); if(!snap.exists()) return;
+    const s=snap.val();
+    const levelOptions=LEVELS.map(l=>`<option value="${l}" ${s.level===l?'selected':''}>${l}</option>`).join('');
+    Modal.show('Editar Estudiante',`
       <div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="edit-stu-name" value="${s.name||''}"></div>
-      <div class="form-group"><label class="form-label">Nueva contraseña (dejar vacío = sin cambio)</label><input class="form-input" type="password" id="edit-stu-pass"></div>
-      <div class="form-group"><label class="form-label">Nivel</label>
-        <select class="form-select" id="edit-stu-level">
-          <optgroup label="PRIMARIA">
-            <option ${s.level==='1ro Primaria'?'selected':''}>1ro Primaria</option>
-            <option ${s.level==='2do Primaria'?'selected':''}>2do Primaria</option>
-            <option ${s.level==='3ro Primaria'?'selected':''}>3ro Primaria</option>
-            <option ${s.level==='4to Primaria'?'selected':''}>4to Primaria</option>
-            <option ${s.level==='5to Primaria'?'selected':''}>5to Primaria</option>
-            <option ${s.level==='6to Primaria'?'selected':''}>6to Primaria</option>
-          </optgroup>
-          <optgroup label="SECUNDARIA">
-            <option ${s.level==='1ro Secundaria'?'selected':''}>1ro Secundaria</option>
-            <option ${s.level==='2do Secundaria'?'selected':''}>2do Secundaria</option>
-            <option ${s.level==='3ro Secundaria'?'selected':''}>3ro Secundaria</option>
-            <option ${s.level==='4to Secundaria'?'selected':''}>4to Secundaria</option>
-            <option ${s.level==='5to Secundaria'?'selected':''}>5to Secundaria</option>
-            <option ${s.level==='6to Secundaria'?'selected':''}>6to Secundaria</option>
-          </optgroup>
-        </select>
-      </div>
-    `, [
-      { label: 'Cancelar', style: 'ghost', fn: Modal.close },
-      { label: 'Guardar', style: 'primary', fn: async () => {
-        const name = $('edit-stu-name').value.trim();
-        const pass = $('edit-stu-pass').value.trim();
-        const level = $('edit-stu-level').value;
-        const updates = { name, level };
-        if (pass.length >= 6) updates.password = pass;
-        await db.ref(`students/${key}`).update(updates);
-        Modal.close();
-        showToast('✅ Estudiante actualizado.');
-      }}
-    ]);
+      <div class="form-group"><label class="form-label">Nueva contrasena (vacio = sin cambio)</label><input class="form-input" type="password" id="edit-stu-pass"></div>
+      <div class="form-group"><label class="form-label">Nivel</label><select class="form-select" id="edit-stu-level">${levelOptions}</select></div>`,
+      [{label:'Cancelar',style:'ghost',fn:Modal.close},{label:'Guardar',style:'primary',fn:async()=>{
+        const name=$('edit-stu-name').value.trim(), pass=$('edit-stu-pass').value.trim(), level=$('edit-stu-level').value;
+        const updates={name, level}; if(pass.length>=6) updates.password=pass;
+        await db.ref(`students/${key}`).update(updates); Modal.close(); showToast('Estudiante actualizado.');
+      }}]);
   },
 
   deleteStudent(key, name) {
-    Modal.show('Eliminar Estudiante', `<p style="color:var(--text2)">¿Eliminar a <strong style="color:var(--text)">${name}</strong>? Se perderá todo su historial.</p>`,
-      [
-        { label: 'Cancelar', style: 'ghost', fn: Modal.close },
-        { label: 'Eliminar', style: 'danger', fn: async () => {
-          await db.ref(`students/${key}`).remove();
-          Modal.close();
-          showToast('🗑 Estudiante eliminado.');
-        }}
-      ]
-    );
+    Modal.show('Eliminar Estudiante',`<p style="color:var(--text2)">Eliminar a <strong style="color:var(--text)">${name}</strong>? Se perdera todo su historial.</p>`,
+      [{label:'Cancelar',style:'ghost',fn:Modal.close},{label:'Eliminar',style:'danger',fn:async()=>{await db.ref(`students/${key}`).remove();Modal.close();showToast('Estudiante eliminado.');}}]);
   },
 
-  // ── RESULTS ────────────────────────────────────
+  // RESULTS
   renderResults() {
-    $('admin-content').innerHTML = `
-      <div id="results-admin-content">
-        <div style="color:var(--text3);text-align:center;padding:32px">Cargando resultados...</div>
-      </div>
-    `;
-
-    db.ref('exam/submissions').get().then(async snap => {
-      const subs = snap.val() || {};
-      const submitted = Object.values(subs).filter(s => s.submitted);
-
-      if (!submitted.length) {
-        $('results-admin-content').innerHTML = `<div class="empty-state">
-          <div class="empty-icon">🏆</div>
-          <h3>Sin resultados aún</h3>
-          <p>Aquí aparecerán los resultados cuando los estudiantes completen una evaluación.</p>
-        </div>`;
+    $('admin-content').innerHTML=`<div id="results-admin-content"><div style="color:var(--text3);text-align:center;padding:28px">Cargando resultados...</div></div>`;
+    db.ref('exam/submissions').get().then(async snap=>{
+      const subs=snap.val()||{};
+      const submitted=Object.values(subs).filter(s=>s.submitted);
+      if(!submitted.length){
+        $('results-admin-content').innerHTML=`<div class="empty-state"><div class="empty-icon">&#127942;</div><h3>Sin resultados</h3><p>Los resultados apareceran aqui cuando los estudiantes completen una evaluacion.</p></div>`;
         return;
       }
+      const stuSnap=await db.ref('students').get();
+      const students=stuSnap.val()||{};
+      submitted.sort((a,b)=>(b.score/b.total)-(a.score/a.total));
+      const avg=Math.round(submitted.reduce((s,sub)=>s+(sub.score/sub.total)*100,0)/submitted.length);
+      const maxPct=Math.round(Math.max(...submitted.map(s=>s.score/s.total*100)));
 
-      // Load student names
-      const stuSnap = await db.ref('students').get();
-      const students = stuSnap.val() || {};
-
-      submitted.sort((a,b) => (b.score/b.total) - (a.score/a.total));
-
-      const avg = Math.round(submitted.reduce((s,sub) => s+(sub.score/sub.total)*100, 0)/submitted.length);
-
-      $('results-admin-content').innerHTML = `
-        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+      $('results-admin-content').innerHTML=`
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px">
           <div class="stat-card primary"><div class="stat-value">${submitted.length}</div><div class="stat-label">Enviaron</div></div>
           <div class="stat-card accent"><div class="stat-value">${avg}%</div><div class="stat-label">Promedio</div></div>
-          <div class="stat-card gold"><div class="stat-value">${Math.round(Math.max(...submitted.map(s=>s.score/s.total*100)))}%</div><div class="stat-label">Máximo</div></div>
+          <div class="stat-card gold"><div class="stat-value">${maxPct}%</div><div class="stat-label">Maximo</div></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button class="btn btn-gold btn-sm" onclick="Admin.downloadAllResultsPDF()">Descargar PDF de todos</button>
         </div>
         <div class="card" style="overflow-x:auto">
           <table class="data-table">
-            <thead><tr><th>#</th><th>Estudiante</th><th>Correctas</th><th>%</th><th>Tiempo</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>#</th><th>Nombre</th><th>Nivel</th><th>Correctas</th><th>%</th><th>Tiempo</th><th>PDF</th></tr></thead>
             <tbody>
-              ${submitted.map((sub, i) => {
-                const pct = Math.round((sub.score/sub.total)*100);
-                const stuKey = Object.keys(students).find(k => students[k].user === sub.studentUser) || '';
-                const stuName = students[stuKey]?.name || 'Estudiante';
-                const badgeClass = pct >= 80 ? 'success' : pct >= 60 ? 'warn' : 'error';
+              ${submitted.map((sub,i)=>{
+                const pct=Math.round((sub.score/sub.total)*100);
+                // Get student name from submission (saved at submit time) or from students data
+                const stuKey=Object.keys(students).find(k=>students[k].user===sub.studentUser||k===safeKey(sub.studentUser||''))||'';
+                const stuName=sub.studentName||students[stuKey]?.name||sub.studentUser||'Estudiante';
+                const stuLevel=sub.studentLevel||students[stuKey]?.level||'-';
+                const badgeClass=pct>=80?'success':pct>=60?'warn':'error';
                 return `<tr>
                   <td style="font-family:var(--font);font-weight:700">${i+1}</td>
                   <td class="name-cell">${stuName}</td>
+                  <td><span class="chip">${stuLevel}</span></td>
                   <td>${sub.score}/${sub.total}</td>
                   <td><span class="badge badge-${badgeClass}">${pct}%</span></td>
                   <td>${formatTime(sub.timeUsed||0)}</td>
-                  <td><button class="btn btn-ghost btn-sm" onclick="Admin.downloadResultPDF('${JSON.stringify(sub).replace(/'/g,"").replace(/"/g,"'")}')">📄</button></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="Admin.downloadOnePDF('${sub.studentUser||''}')">PDF</button></td>
                 </tr>`;
               }).join('')}
             </tbody>
           </table>
-        </div>
-      `;
+        </div>`;
     });
+  },
+
+  async downloadOnePDF(studentUser) {
+    const subSnap=await db.ref(`exam/submissions/${safeKey(studentUser)}`).get();
+    if(!subSnap.exists()) return showToast('No se encontro el resultado.');
+    const sub=subSnap.val();
+    const student={name:sub.studentName||studentUser, user:sub.studentUser||studentUser, level:sub.studentLevel||'-'};
+    App.generatePDF(student, sub);
+  },
+
+  async downloadAllResultsPDF() {
+    const snap=await db.ref('exam/submissions').get();
+    const stuSnap=await db.ref('students').get();
+    const students=stuSnap.val()||{};
+    const subs=snap.val()||{};
+    const submitted=Object.values(subs).filter(s=>s.submitted).sort((a,b)=>(b.score/b.total)-(a.score/a.total));
+    if(!submitted.length) return showToast('Sin resultados para exportar.');
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF();
+    const avg=Math.round(submitted.reduce((s,sub)=>s+(sub.score/sub.total)*100,0)/submitted.length);
+
+    // Cover page
+    doc.setFillColor(10,12,20);
+    doc.rect(0,0,210,297,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(28);
+    doc.text('MusiTest',105,60,{align:'center'});
+    doc.setFontSize(16);
+    doc.setFont('helvetica','normal');
+    doc.text('Reporte General de Evaluacion',105,75,{align:'center'});
+    doc.setFontSize(11);
+    doc.setTextColor(156,163,196);
+    doc.text(`Fecha: ${formatDate(Date.now())}`,105,90,{align:'center'});
+    doc.text(`Total estudiantes: ${submitted.length}`,105,100,{align:'center'});
+    doc.text(`Promedio general: ${avg}%`,105,110,{align:'center'});
+    // summary table
+    doc.setFillColor(26,30,48);
+    doc.roundedRect(30,130,150,100,8,8,'F');
+    doc.setTextColor(108,99,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(13);
+    doc.text('Resumen',105,148,{align:'center'});
+    doc.setTextColor(200,200,220);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    const maxPct=Math.round(Math.max(...submitted.map(s=>s.score/s.total*100)));
+    const minPct=Math.round(Math.min(...submitted.map(s=>s.score/s.total*100)));
+    doc.text(`Maximo: ${maxPct}%`,105,162,{align:'center'});
+    doc.text(`Minimo: ${minPct}%`,105,172,{align:'center'});
+    doc.text(`Promedio: ${avg}%`,105,182,{align:'center'});
+    doc.text(`Aprobados (>=60%): ${submitted.filter(s=>s.score/s.total>=0.6).length}`,105,192,{align:'center'});
+    doc.text(`Desaprobados: ${submitted.filter(s=>s.score/s.total<0.6).length}`,105,202,{align:'center'});
+    doc.setTextColor(100,100,120);
+    doc.setFontSize(8);
+    doc.text('Kabert Pro - LMKE | MusiTest Platform',105,285,{align:'center'});
+
+    // Results table page
+    doc.addPage();
+    doc.setFillColor(10,12,20);
+    doc.rect(0,0,210,18,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.text('Resultados de todos los estudiantes',20,12);
+
+    // Header row
+    let y=28;
+    doc.setFillColor(26,30,48);
+    doc.rect(10,y-4,190,10,'F');
+    doc.setTextColor(108,99,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8);
+    doc.text('#',14,y+2);
+    doc.text('Nombre',22,y+2);
+    doc.text('Nivel',90,y+2);
+    doc.text('Resultado',135,y+2);
+    doc.text('%',162,y+2);
+    doc.text('Tiempo',175,y+2);
+    y+=12;
+
+    submitted.forEach((sub,i)=>{
+      if(y>275){
+        doc.addPage();
+        doc.setFillColor(10,12,20);
+        doc.rect(0,0,210,10,'F');
+        y=16;
+      }
+      const pct=Math.round((sub.score/sub.total)*100);
+      const stuKey=Object.keys(students).find(k=>students[k].user===sub.studentUser||k===safeKey(sub.studentUser||''))||'';
+      const stuName=sub.studentName||students[stuKey]?.name||sub.studentUser||'Estudiante';
+      const stuLevel=sub.studentLevel||students[stuKey]?.level||'-';
+      // alternate row bg
+      if(i%2===0){doc.setFillColor(20,24,38);doc.rect(10,y-3,190,8,'F');}
+      doc.setFont('helvetica','bold');
+      doc.setTextColor(pct>=60?6:200, pct>=60?150:50, pct>=60?100:70);
+      doc.setFontSize(7);
+      doc.text(String(i+1),14,y+2);
+      doc.setTextColor(220,220,235);
+      doc.setFont('helvetica','normal');
+      doc.text(stuName.substring(0,28),22,y+2);
+      doc.text(stuLevel.substring(0,18),90,y+2);
+      doc.text(`${sub.score}/${sub.total}`,135,y+2);
+      doc.setFont('helvetica','bold');
+      doc.setTextColor(pct>=80?6:pct>=60?255:200, pct>=80?214:pct>=60?209:50, pct>=80?160:pct>=60?102:70);
+      doc.text(pct+'%',162,y+2);
+      doc.setFont('helvetica','normal');
+      doc.setTextColor(150,150,170);
+      doc.text(formatTime(sub.timeUsed||0),175,y+2);
+      y+=9;
+    });
+
+    // Individual detail pages
+    for(const sub of submitted){
+      if(!sub.questions||!sub.answers) continue;
+      doc.addPage();
+      const pct=Math.round((sub.score/sub.total)*100);
+      const stuKey=Object.keys(students).find(k=>students[k].user===sub.studentUser||k===safeKey(sub.studentUser||''))||'';
+      const stuName=sub.studentName||students[stuKey]?.name||sub.studentUser||'Estudiante';
+      const stuLevel=sub.studentLevel||students[stuKey]?.level||'-';
+      doc.setFillColor(10,12,20);
+      doc.rect(0,0,210,22,'F');
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(12);
+      doc.text(stuName,20,12);
+      doc.setFontSize(9);
+      doc.setFont('helvetica','normal');
+      doc.setTextColor(156,163,196);
+      doc.text(`${stuLevel} | ${pct}% (${sub.score}/${sub.total})`,20,19);
+      // score badge
+      doc.setFillColor(108,99,255);
+      doc.roundedRect(165,4,36,14,4,4,'F');
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(12);
+      doc.text(pct+'%',183,14,{align:'center'});
+      let y2=30;
+      sub.questions.forEach((q,i)=>{
+        const ans=sub.answers[i]; const isCorrect=ans===q.correctIndex;
+        if(y2>265){doc.addPage();y2=14;}
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(8);
+        doc.setTextColor(isCorrect?6:200, isCorrect?140:50, isCorrect?90:70);
+        const qLines=doc.splitTextToSize(`${i+1}. ${q.text}`,170);
+        doc.text(qLines,14,y2);
+        y2+=qLines.length*4+2;
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(7);
+        q.options.forEach((opt,oi)=>{
+          if(y2>272){doc.addPage();y2=14;}
+          const isAns=oi===ans, isCorr=oi===q.correctIndex;
+          if(isCorr) doc.setTextColor(6,150,100);
+          else if(isAns&&!isCorr) doc.setTextColor(200,50,70);
+          else doc.setTextColor(120,120,140);
+          doc.text((isCorr?'[OK] ':isAns&&!isCorr?'[X]  ':'      ')+opt.letter+'. '+opt.text,18,y2);
+          y2+=4;
+        });
+        doc.setTextColor(50,55,80);
+        doc.line(14,y2,196,y2);
+        y2+=3;
+      });
+    }
+
+    const pageCount=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pageCount;i++){
+      doc.setPage(i);
+      doc.setFontSize(7);
+      doc.setTextColor(100,100,120);
+      doc.setFont('helvetica','normal');
+      doc.text('Kabert Pro - LMKE | MusiTest',105,291,{align:'center'});
+      doc.text(`Pag. ${i}/${pageCount}`,195,291,{align:'right'});
+    }
+    doc.save(`MusiTest_Resultados_Generales_${Date.now()}.pdf`);
+    showToast('PDF general descargado.');
   }
 };
 
-// ══════════════════════════════════════════════════
-// MODAL SYSTEM
-// ══════════════════════════════════════════════════
+// ── MODAL ─────────────────────────────────────────
 const Modal = {
   show(title, body, buttons=[]) {
-    $('modal-title').textContent = title;
-    $('modal-body').innerHTML = body;
-    $('modal-footer').innerHTML = buttons.map((b,i) =>
-      `<button class="btn btn-${b.style||'ghost'}" id="modal-btn-${i}">${b.label}</button>`
-    ).join('');
-    buttons.forEach((b,i) => {
-      $(`modal-btn-${i}`).addEventListener('click', b.fn);
-    });
+    $('modal-title').textContent=title;
+    $('modal-body').innerHTML=body;
+    $('modal-footer').innerHTML=buttons.map((b,i)=>`<button class="btn btn-${b.style||'ghost'}" id="modal-btn-${i}">${b.label}</button>`).join('');
+    buttons.forEach((b,i)=>$(`modal-btn-${i}`).addEventListener('click',b.fn));
     $('modal-overlay').classList.remove('hidden');
   },
-  close() {
-    $('modal-overlay').classList.add('hidden');
-  }
+  close() { $('modal-overlay').classList.add('hidden'); }
 };
+$('modal-overlay').addEventListener('click', e=>{ if(e.target===$('modal-overlay')) Modal.close(); });
 
-// Close modal on overlay click
-$('modal-overlay').addEventListener('click', e => {
-  if (e.target === $('modal-overlay')) Modal.close();
-});
-
-// ══════════════════════════════════════════════════
-// BOOTSTRAP
-// ══════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => App.init());
+// ── BOOT ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', ()=>App.init());
 </script>
 </body>
 </html>
